@@ -13,7 +13,17 @@
     --cyan:#376BB4; --green:#2FA36B; --red:#F24B64;
     --gold:#E8B23D; --silver:#B7C0C9; --bronze:#C97A43;
     --text:#373636; --muted:#8A8886; --line:rgba(55,54,54,0.14);
+    /* Skema warna quadrant ala Quizzo untuk 4 pilihan jawaban */
+    --quad-0:#4C6FFF; --quad-0-d:#3651CC;
+    --quad-1:#FF5470; --quad-1-d:#D63A54;
+    --quad-2:#FFA836; --quad-2-d:#DB8A1E;
+    --quad-3:#2FC77C; --quad-3-d:#1F9E60;
   }
+  @keyframes slideUpFade{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes popIn{ 0%{opacity:0; transform:scale(.5);} 60%{opacity:1; transform:scale(1.12);} 100%{transform:scale(1);} }
+  @keyframes shrinkPop{ 0%{transform:scale(1);} 45%{transform:scale(.94);} 100%{transform:scale(1);} }
+  @keyframes fillDot{ from{transform:scale(.4); opacity:.5;} to{transform:scale(1); opacity:1;} }
+  @keyframes countPulse{ 0%{transform:scale(1);} 50%{transform:scale(1.08);} 100%{transform:scale(1);} }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;height:100%;}
   body{
@@ -73,12 +83,13 @@
   .qcount{font-size:13px; color:var(--muted); font-weight:600;}
   .qcount b{color:var(--text); font-size:15px;}
   .dots{display:flex; gap:5px; margin-bottom:16px; flex-wrap:wrap;}
-  .dots i{width:7px; height:7px; border-radius:50%; background:var(--line); display:block;}
-  .dots i.done{background:var(--cyan);}
+  .dots i{width:7px; height:7px; border-radius:50%; background:var(--line); display:block; transition:background .2s ease;}
+  .dots i.done{background:var(--cyan); animation:fillDot .3s cubic-bezier(.34,1.56,.64,1) both;}
   .qcard{
     background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px;
-    margin-bottom:16px; font-size:16.5px; font-weight:600; line-height:1.4; min-height:78px;
+    margin-bottom:24px; font-size:16.5px; font-weight:600; line-height:1.4; min-height:78px;
     display:flex; align-items:center; gap:10px; position:relative;
+    animation:slideUpFade .32s cubic-bezier(.2,.8,.3,1) both;
   }
   .jebakan-badge{
     position:absolute; top:-10px; right:12px; background:linear-gradient(135deg,#F5C25A,var(--gold));
@@ -90,6 +101,11 @@
     color:var(--cyan); font-family:'Space Grotesk'; font-weight:700; font-size:10px;
     padding:4px 10px; border-radius:20px; letter-spacing:.06em; text-transform:uppercase;
   }
+  .diff-badge{
+    position:absolute; bottom:-10px; left:12px; font-family:'Space Grotesk'; font-weight:700; font-size:9.5px;
+    padding:3px 9px; border-radius:20px; letter-spacing:.06em; text-transform:uppercase; color:#fff;
+  }
+  .diff-badge.mudah{background:var(--quad-3);} .diff-badge.sedang{background:var(--quad-2);} .diff-badge.sulit{background:var(--quad-1);}
   /* ---------- FULL-SCREEN FEEDBACK FLASH (ala Quizzo) ---------- */
   .flash{
     position:fixed; inset:0; z-index:50; display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -100,28 +116,53 @@
   .flash.wrong{background:linear-gradient(160deg, #F24B64, #C93350);}
   .flash.partial{background:linear-gradient(160deg, #E8B23D, #C4901F);}
   .flash .icon{font-size:54px; margin-bottom:6px;}
+  .flash.show .icon{animation:popIn .4s cubic-bezier(.34,1.56,.64,1) both;}
   .flash .title{font-family:'Space Grotesk'; font-size:26px; font-weight:700; color:#fff;}
   .flash .sub{font-size:14px; color:rgba(255,255,255,.85); margin-top:4px;}
   .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
-  .grid.text-mode{grid-template-columns:1fr;}
+  .grid.text-mode{grid-template-columns:1fr 1fr;}
   .opt{
     background:var(--card2); border:2px solid var(--line); border-radius:16px; padding:10px;
     display:flex; flex-direction:column; align-items:center; cursor:pointer; text-align:center;
+    animation:slideUpFade .32s cubic-bezier(.2,.8,.3,1) both; transition:transform .12s ease, box-shadow .12s ease;
   }
-  .opt.text-opt{flex-direction:row; align-items:center; text-align:left; padding:14px 16px; gap:10px;}
-  .opt img{width:100%; aspect-ratio:1/1; object-fit:contain; border-radius:10px; background:var(--card2); margin-bottom:8px;}
+  .opt:active{transform:scale(.96);}
+  .opt:nth-child(1){animation-delay:.02s;} .opt:nth-child(2){animation-delay:.07s;}
+  .opt:nth-child(3){animation-delay:.12s;} .opt:nth-child(4){animation-delay:.17s;}
+  .opt img{width:100%; aspect-ratio:1/1; object-fit:contain; border-radius:10px; background:#fff; margin-bottom:8px;}
   .opt .lbl{font-size:12.5px; font-weight:700; color:var(--text);}
-  .opt.text-opt .lbl{font-size:14px; line-height:1.4;}
-  .opt .k{font-size:10px; color:var(--muted); font-weight:700; letter-spacing:.08em; margin-bottom:2px;}
-  .opt.text-opt .k{margin:0; flex-shrink:0; width:20px; height:20px; border-radius:6px; background:rgba(55,54,54,.06); display:flex; align-items:center; justify-content:center;}
-  .opt.correct{border-color:var(--green); box-shadow:0 0 0 3px rgba(62,207,142,.25);}
-  .opt.wrong{border-color:var(--red); box-shadow:0 0 0 3px rgba(255,84,112,.25);}
-  .opt.disabled{pointer-events:none; opacity:.55;}
-  .opt.disabled.correct, .opt.disabled.wrong{opacity:1;}
-  .opt.bs-opt{padding:20px; border-radius:18px;}
-  .opt.bs-benar{background:rgba(62,207,142,.12); border-color:var(--green);}
-  .opt.bs-salah{background:rgba(255,84,112,.12); border-color:var(--red);}
-  .opt.bs-opt .lbl{font-size:17px;}
+  .opt .k{font-size:10px; color:var(--muted); font-weight:700; letter-spacing:.08em; margin-bottom:2px;
+    width:22px; height:22px; border-radius:7px; display:flex; align-items:center; justify-content:center; margin:0 auto 6px;}
+  .opt.disabled{pointer-events:none;}
+  .opt.disabled:not(.correct):not(.wrong){opacity:.4;}
+
+  /* Kartu jawaban GAMBAR: putih + aksen quadrant di badge huruf */
+  .opt.img-opt .k{color:#fff;}
+  .opt.img-opt.q0 .k{background:var(--quad-0);} .opt.img-opt.q1 .k{background:var(--quad-1);}
+  .opt.img-opt.q2 .k{background:var(--quad-2);} .opt.img-opt.q3 .k{background:var(--quad-3);}
+  .opt.img-opt.correct{border-color:var(--quad-3); box-shadow:0 0 0 3px rgba(47,199,124,.25); animation:shrinkPop .35s ease;}
+  .opt.img-opt.wrong{border-color:var(--quad-1); box-shadow:0 0 0 3px rgba(255,84,112,.25); animation:shrinkPop .35s ease;}
+
+  /* Tombol jawaban TEKS: warna solid penuh ala quadrant */
+  .opt.text-opt{flex-direction:row; align-items:center; text-align:left; padding:16px; gap:10px; border:none; color:#fff; min-height:64px;}
+  .opt.text-opt .lbl{font-size:14.5px; line-height:1.35; color:#fff; font-weight:700;}
+  .opt.text-opt .k{background:rgba(255,255,255,.25); color:#fff; flex-shrink:0;}
+  .opt.text-opt.q0{background:linear-gradient(155deg,var(--quad-0),var(--quad-0-d));}
+  .opt.text-opt.q1{background:linear-gradient(155deg,var(--quad-1),var(--quad-1-d));}
+  .opt.text-opt.q2{background:linear-gradient(155deg,var(--quad-2),var(--quad-2-d));}
+  .opt.text-opt.q3{background:linear-gradient(155deg,var(--quad-3),var(--quad-3-d));}
+  .opt.text-opt.correct{box-shadow:0 0 0 3px rgba(47,199,124,.5); animation:shrinkPop .35s ease;}
+  .opt.text-opt.wrong{box-shadow:0 0 0 3px rgba(255,84,112,.5); animation:shrinkPop .35s ease;}
+  .opt.text-opt.disabled:not(.correct):not(.wrong){filter:grayscale(.5);}
+
+  /* Benar/Salah: 2 tombol besar hijau & merah */
+  .opt.bs-opt{padding:22px; border-radius:18px; border:none; color:#fff; min-height:64px;}
+  .opt.bs-opt .lbl{font-size:18px; color:#fff;}
+  .opt.bs-opt .k{background:rgba(255,255,255,.28); color:#fff;}
+  .opt.bs-benar{background:linear-gradient(155deg,var(--quad-3),var(--quad-3-d));}
+  .opt.bs-salah{background:linear-gradient(155deg,var(--quad-1),var(--quad-1-d));}
+  .opt.bs-opt.correct{box-shadow:0 0 0 3px rgba(255,255,255,.6); animation:shrinkPop .35s ease;}
+  .opt.bs-opt.wrong{filter:grayscale(.6);}
   .grid.bs-mode{grid-template-columns:1fr; gap:14px;}
 
   /* ---------- SLIDER ---------- */
@@ -147,6 +188,7 @@
   #result{align-items:center; text-align:center;}
   .score-label{color:var(--muted); font-size:13px; letter-spacing:.14em; text-transform:uppercase; margin-top:8px;}
   .score-num{font-family:'Space Grotesk'; font-size:56px; font-weight:700; color:var(--red); margin:2px 0 4px; line-height:1;}
+  .score-num.pulse{animation:countPulse .25s ease;}
   .score-sub{color:var(--muted); font-size:13px; margin-bottom:18px;}
   .kode-card{
     width:100%; background:linear-gradient(135deg, var(--card2), var(--card)); border:1px dashed var(--cyan);
@@ -156,15 +198,30 @@
   .kode-card .kode{font-family:'Space Grotesk'; font-size:26px; font-weight:700; letter-spacing:.06em; color:var(--cyan);}
   .kode-card .hint{font-size:12px; color:var(--muted); margin-top:6px;}
 
-  .podium{display:flex; align-items:flex-end; justify-content:center; gap:10px; width:100%; margin-bottom:18px;}
-  .pcol{flex:1; display:flex; flex-direction:column; align-items:center;}
-  .pcol .avatar{width:46px; height:46px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-family:'Space Grotesk'; font-size:18px; margin-bottom:8px; color:var(--text);}
-  .pcol .name{font-size:12px; font-weight:700; margin-bottom:2px; max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  .pcol .pts{font-size:11px; color:var(--muted); margin-bottom:8px;}
-  .pcol .bar{width:100%; border-radius:10px 10px 0 0; display:flex; align-items:flex-start; justify-content:center; padding-top:6px; font-family:'Space Grotesk'; font-weight:700; font-size:13px; color:var(--text);}
-  .p1 .avatar{background:var(--gold);} .p1 .bar{background:linear-gradient(180deg,var(--gold),#B98E2E); height:88px;}
-  .p2 .avatar{background:var(--silver);} .p2 .bar{background:linear-gradient(180deg,var(--silver),#8C99A6); height:64px;}
-  .p3 .avatar{background:var(--bronze);} .p3 .bar{background:linear-gradient(180deg,var(--bronze),#A3672E); height:48px;}
+  .lb-list{width:100%; display:flex; flex-direction:column; gap:8px; margin-bottom:6px;}
+  .lb-row{
+    display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--line);
+    border-radius:14px; padding:10px 14px; animation:slideUpFade .3s cubic-bezier(.2,.8,.3,1) both;
+  }
+  .lb-row:nth-child(1){animation-delay:.03s;} .lb-row:nth-child(2){animation-delay:.08s;}
+  .lb-row:nth-child(3){animation-delay:.13s;} .lb-row:nth-child(4){animation-delay:.18s;}
+  .lb-row:nth-child(5){animation-delay:.23s;}
+  .lb-row.me{border-color:var(--cyan); background:rgba(55,107,180,.06);}
+  .lb-rank{
+    width:26px; height:26px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-family:'Space Grotesk'; font-weight:700; font-size:12.5px; color:var(--muted); background:var(--card2);
+  }
+  .lb-rank.top1{background:linear-gradient(155deg,var(--gold),#B98E2E); color:#fff;}
+  .lb-rank.top2{background:linear-gradient(155deg,var(--silver),#8C99A6); color:#fff;}
+  .lb-rank.top3{background:linear-gradient(155deg,var(--bronze),#A3672E); color:#fff;}
+  .lb-avatar{
+    width:34px; height:34px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-family:'Space Grotesk'; font-size:14px; color:#fff;
+    background:linear-gradient(135deg,var(--quad-0),var(--quad-1));
+  }
+  .lb-info{flex:1; min-width:0;}
+  .lb-name{font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .lb-pts{font-family:'Space Grotesk'; font-weight:700; font-size:14px; color:var(--text); flex-shrink:0;}
 
   .rank-me{font-size:13px; color:var(--muted); margin-bottom:18px;}
   .rank-me b{color:var(--cyan);}
@@ -246,7 +303,7 @@
     </div>
 
     <h3 style="align-self:flex-start; margin-bottom:14px; font-size:15px;">🏆 Leaderboard Booth</h3>
-    <div class="podium" id="podium"></div>
+    <div class="lb-list" id="lbList"></div>
     <div class="rank-me" id="rankMe"></div>
 
     <div class="result-actions">
@@ -431,8 +488,11 @@ function renderQuestion(){
   document.getElementById('qNow').textContent = STATE.idx + 1;
 
   var qTextEl = document.getElementById('qText');
+  var diffLabel = { MUDAH:'Mudah', SEDANG:'Sedang', SULIT:'Sulit' }[q.kesulitan] || 'Sedang';
+  var diffCls = (q.kesulitan || 'SEDANG').toLowerCase();
   qTextEl.innerHTML =
     '<span class="type-badge">'+ (TYPE_LABEL[q.tipe] || 'Kuis') +'</span>' +
+    '<span class="diff-badge '+diffCls+'">'+diffLabel+'</span>' +
     (q.jebakan ? '<span class="jebakan-badge">⚡ Jebakan!</span>' : '') +
     '<span>'+q.pertanyaan+'</span>';
 
@@ -452,10 +512,13 @@ function renderQuestion(){
   var isBS = q.tipe === 'BENARSALAH';
   wrap.className = 'grid' + (isTeks ? ' text-mode' : '') + (isBS ? ' bs-mode' : '');
   wrap.innerHTML = '';
-  q.pilihan.forEach(function(o){
+  var QUAD = ['q0','q1','q2','q3'];
+  q.pilihan.forEach(function(o, idx){
     var div = document.createElement('div');
     var bsClass = isBS ? (' bs-opt ' + (o.nama.toLowerCase() === 'benar' ? 'bs-benar' : 'bs-salah')) : '';
-    div.className = 'opt' + (isTeks || isBS ? ' text-opt' : '') + bsClass;
+    var quadClass = !isBS ? (' ' + QUAD[idx % 4]) : '';
+    var typeClass = isTeks || isBS ? ' text-opt' : ' img-opt';
+    div.className = 'opt' + typeClass + quadClass + bsClass;
     div.innerHTML = isTeks || isBS
       ? '<div class="k">'+(isBS ? (o.nama.toLowerCase()==='benar'?'✓':'✕') : o.key)+'</div><div class="lbl">'+o.nama+'</div>'
       : '<div class="k">'+o.key+'</div><img src="'+o.gambar+'" alt=""><div class="lbl">'+o.nama+'</div>';
@@ -489,14 +552,15 @@ function submitSlider(q, guess){
   document.getElementById('sliderInput').disabled = true;
   document.getElementById('btnSliderSubmit').disabled = true;
 
+  var basePoin = poinUntukSoal_(q);
   var range = q.sliderMax - q.sliderMin;
   var diff = Math.abs(guess - q.sliderTarget);
   var diffRatio = range > 0 ? diff / range : 0;
   var pts, levelCorrect, flashKind, title, sub;
 
-  if (diffRatio <= 0.05){ pts = 100; levelCorrect = true; flashKind = 'correct'; title = 'Tepat Sekali!'; sub = '+100 poin'; }
-  else if (diffRatio <= 0.20){ pts = 60; levelCorrect = true; flashKind = 'partial'; title = 'Lumayan Dekat!'; sub = '+60 poin'; }
-  else { pts = 20; levelCorrect = false; flashKind = 'wrong'; title = 'Meleset Jauh'; sub = 'Jawaban: '+q.sliderTarget+' '+(q.sliderUnit||''); }
+  if (diffRatio <= 0.05){ pts = basePoin; levelCorrect = true; flashKind = 'correct'; title = 'Tepat Sekali!'; sub = '+'+pts+' poin'; }
+  else if (diffRatio <= 0.20){ pts = Math.round(basePoin*0.6); levelCorrect = true; flashKind = 'partial'; title = 'Lumayan Dekat!'; sub = '+'+pts+' poin'; }
+  else { pts = Math.round(basePoin*0.2); levelCorrect = false; flashKind = 'wrong'; title = 'Meleset Jauh'; sub = 'Jawaban: '+q.sliderTarget+' '+(q.sliderUnit||''); }
 
   STATE.skor += pts;
   if (levelCorrect) STATE.benar++;
@@ -510,20 +574,30 @@ function submitSlider(q, guess){
   }, 550);
 }
 
+function poinUntukSoal_(q){
+  var cfg = STATE.config || {};
+  var basePoin = q.kesulitan === 'MUDAH' ? (cfg.poinMudah || 70)
+    : q.kesulitan === 'SULIT' ? (cfg.poinSulit || 150)
+    : (cfg.poinSedang || 100);
+  var bonus = q.jebakan ? (cfg.bonusJebakan || 0) : 0;
+  return basePoin + bonus;
+}
+
 function pickAnswer(chosen, el, q){
   if (STATE.ended) return;
   document.querySelectorAll('.opt').forEach(function(o){ o.classList.add('disabled'); });
   var isCorrect = chosen.nama === q.jawabanBenar;
   el.classList.add(isCorrect ? 'correct' : 'wrong');
+  var poin = poinUntukSoal_(q);
   if (!isCorrect){
     document.querySelectorAll('.opt').forEach(function(o){
       if (o.querySelector('.lbl').textContent === q.jawabanBenar) o.classList.add('correct');
     });
   } else {
-    STATE.benar++; STATE.skor += 100;
+    STATE.benar++; STATE.skor += poin;
   }
   document.getElementById('dot'+STATE.idx).classList.add('done');
-  showFlash(isCorrect ? 'correct' : 'wrong', isCorrect ? 'Benar!' : 'Kurang Tepat', isCorrect ? '+100 poin' : 'Yuk lanjut soal berikutnya');
+  showFlash(isCorrect ? 'correct' : 'wrong', isCorrect ? 'Benar!' : 'Kurang Tepat', isCorrect ? ('+'+poin+' poin') : 'Yuk lanjut soal berikutnya');
   setTimeout(function(){
     STATE.idx++;
     if (STATE.idx >= STATE.questions.length){ endGame(); }
@@ -554,23 +628,45 @@ function endGame(){
     .then(function(res){ renderResult(res, nama); show('result'); });
 }
 
+function animateCountUp(el, target, duration){
+  var start = 0;
+  var startTime = null;
+  function step(ts){
+    if (!startTime) startTime = ts;
+    var progress = Math.min(1, (ts - startTime) / duration);
+    var eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    el.textContent = Math.round(start + (target - start) * eased);
+    if (progress < 1) { requestAnimationFrame(step); }
+    else { el.textContent = target; el.classList.add('pulse'); setTimeout(function(){ el.classList.remove('pulse'); }, 250); }
+  }
+  requestAnimationFrame(step);
+}
+
 function renderResult(res, nama){
-  document.getElementById('scoreNum').textContent = STATE.skor;
+  var scoreEl = document.getElementById('scoreNum');
+  scoreEl.textContent = '0';
+  animateCountUp(scoreEl, STATE.skor, 700);
   document.getElementById('scoreSub').textContent = STATE.benar + ' dari ' + STATE.questions.length + ' benar';
   document.getElementById('kodeText').textContent = res.kode;
 
-  var top3 = res.leaderboard.slice(0,3);
-  var order = [1,0,2]; // render posisi 2-1-3 secara visual
-  var podium = document.getElementById('podium'); podium.innerHTML='';
-  var classes = ['p2','p1','p3'];
-  order.forEach(function(i, idx){
-    var p = top3[i];
-    var col = document.createElement('div');
-    col.className = 'pcol ' + classes[idx];
-    if (!p){ col.style.visibility='hidden'; podium.appendChild(col); return; }
-    var initial = (p.nama||'?').charAt(0).toUpperCase();
-    col.innerHTML = '<div class="avatar">'+initial+'</div><div class="name">'+p.nama+'</div><div class="pts">'+p.skor+' pts</div><div class="bar">'+(i+1)+'</div>';
-    podium.appendChild(col);
+  var igMe = document.getElementById('inIg').value.trim().toLowerCase().replace(/^@/, '');
+  var top10 = res.leaderboard.slice(0, 10);
+  var lbList = document.getElementById('lbList'); lbList.innerHTML = '';
+  var rankClass = ['top1', 'top2', 'top3'];
+  var rankIcons = [STATE.config && STATE.config.iconRank1, STATE.config && STATE.config.iconRank2, STATE.config && STATE.config.iconRank3];
+  top10.forEach(function(p, i){
+    var row = document.createElement('div');
+    var isMe = p.igUsername && String(p.igUsername).trim().toLowerCase().replace(/^@/, '') === igMe;
+    row.className = 'lb-row' + (isMe ? ' me' : '');
+    var initial = (p.nama || '?').charAt(0).toUpperCase();
+    var rankCls = rankClass[i] || '';
+    var rankInner = (rankIcons[i]) ? '<img src="'+rankIcons[i]+'" alt="" style="width:100%;height:100%;object-fit:contain;">' : (i + 1);
+    row.innerHTML =
+      '<div class="lb-rank ' + rankCls + '">' + rankInner + '</div>' +
+      '<div class="lb-avatar">' + initial + '</div>' +
+      '<div class="lb-info"><div class="lb-name">' + p.nama + '</div></div>' +
+      '<div class="lb-pts">' + p.skor + '</div>';
+    lbList.appendChild(row);
   });
 
   var rankEl = document.getElementById('rankMe');
