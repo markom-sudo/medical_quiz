@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Elitech Expo Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFFFFF; --card:#F6F7F9; --card2:#EFF1F4;
+    --orange:#376BB4; --orange-d:#2A5488;
+    --cyan:#376BB4; --green:#2FA36B; --red:#F24B64;
+    --gold:#E8B23D; --silver:#B7C0C9; --bronze:#C97A43;
+    --text:#373636; --muted:#8A8886; --line:rgba(55,54,54,0.14);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%, #EAF1FA 0%, var(--bg) 55%);
+    color:var(--text); font-family:'Inter',sans-serif;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .app{width:100%; max-width:460px; min-height:100vh; padding:20px 18px 32px; display:flex; flex-direction:column;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif; margin:0;}
+  .pulse-bar{height:2px; width:100%; background:linear-gradient(90deg, transparent, var(--cyan), transparent); opacity:.6; margin-bottom:18px; border-radius:2px;}
+  .brand{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
+  .brand .dot{width:8px;height:8px;border-radius:50%;background:var(--orange); box-shadow:0 0 12px var(--orange);}
+  .brand span{color:var(--muted); font-size:12px; letter-spacing:.14em; text-transform:uppercase;}
+
+  .screen{display:none; flex-direction:column; flex:1;}
+  .screen.active{display:flex;}
+
+  /* ---------- LANDING ---------- */
+  #landing h1{font-size:26px; line-height:1.25; margin-bottom:6px;}
+  #landing h1 .hl{color:var(--red);}
+  #landing p.sub{color:var(--muted); font-size:14px; margin:0 0 20px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-weight:600;}
+  .field input{
+    width:100%; padding:13px 14px; border-radius:12px; border:1px solid var(--line);
+    background:var(--card); color:var(--text); font-size:15px; font-family:inherit;
+  }
+  .field input:focus{outline:none; border-color:var(--cyan);}
+  .follow-box{
+    background:var(--card2); border:1px solid var(--line); border-radius:14px; padding:14px;
+    margin:14px 0 18px; display:flex; gap:12px; align-items:flex-start;
+  }
+  .follow-box input[type=checkbox]{width:20px;height:20px; margin-top:2px; accent-color:var(--orange); flex-shrink:0;}
+  .follow-box a{color:var(--cyan); font-weight:700; text-decoration:none;}
+  .follow-box .txt{font-size:13.5px; color:var(--text); line-height:1.5;}
+  .btn{
+    border:none; border-radius:14px; padding:16px; font-size:16px; font-weight:700; font-family:'Space Grotesk',sans-serif;
+    cursor:pointer; width:100%; letter-spacing:.02em; transition:transform .1s ease, opacity .2s ease;
+  }
+  .btn:active{transform:scale(.98);}
+  .btn-primary{background:linear-gradient(135deg, var(--orange), var(--orange-d)); color:#fff; box-shadow:0 8px 24px rgba(55,107,180,0.30);}
+  .btn-primary:disabled{opacity:.35; box-shadow:none;}
+  .btn-ghost{background:transparent; color:var(--cyan); border:1px solid rgba(55,107,180,.4);}
+  .rules{margin-top:auto; padding-top:18px; color:var(--muted); font-size:12px; line-height:1.7;}
+  .rules b{color:var(--text);}
+  .stat-line{display:flex; align-items:center; justify-content:center; gap:8px; margin-top:14px; font-size:12.5px; color:var(--muted);}
+  .stat-line .avatars{display:flex;}
+  .stat-line .avatars span{width:20px; height:20px; border-radius:50%; background:linear-gradient(135deg,var(--cyan),var(--red)); border:2px solid var(--bg); margin-left:-6px; display:inline-block;}
+  .stat-line .avatars span:first-child{margin-left:0;}
+
+  /* ---------- GAME ---------- */
+  #game .topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .ring-wrap{position:relative; width:64px; height:64px;}
+  .ring-wrap svg{transform:rotate(-90deg);}
+  .ring-wrap .num{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; font-size:18px;}
+  .qcount{font-size:13px; color:var(--muted); font-weight:600;}
+  .qcount b{color:var(--text); font-size:15px;}
+  .dots{display:flex; gap:5px; margin-bottom:16px; flex-wrap:wrap;}
+  .dots i{width:7px; height:7px; border-radius:50%; background:var(--line); display:block;}
+  .dots i.done{background:var(--cyan);}
+  .qcard{
+    background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px;
+    margin-bottom:16px; font-size:16.5px; font-weight:600; line-height:1.4; min-height:78px;
+    display:flex; align-items:center; gap:10px; position:relative;
+  }
+  .jebakan-badge{
+    position:absolute; top:-10px; right:12px; background:linear-gradient(135deg,#F5C25A,var(--gold));
+    color:var(--text); font-family:'Space Grotesk'; font-weight:700; font-size:10.5px;
+    padding:4px 10px; border-radius:20px; letter-spacing:.04em; box-shadow:0 4px 12px rgba(232,178,61,.35);
+  }
+  .type-badge{
+    position:absolute; top:-10px; left:12px; background:var(--card2); border:1px solid var(--line);
+    color:var(--cyan); font-family:'Space Grotesk'; font-weight:700; font-size:10px;
+    padding:4px 10px; border-radius:20px; letter-spacing:.06em; text-transform:uppercase;
+  }
+  /* ---------- FULL-SCREEN FEEDBACK FLASH (ala Quizzo) ---------- */
+  .flash{
+    position:fixed; inset:0; z-index:50; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .15s ease;
+  }
+  .flash.show{opacity:1;}
+  .flash.correct{background:linear-gradient(160deg, #34B378, #22885A);}
+  .flash.wrong{background:linear-gradient(160deg, #F24B64, #C93350);}
+  .flash.partial{background:linear-gradient(160deg, #E8B23D, #C4901F);}
+  .flash .icon{font-size:54px; margin-bottom:6px;}
+  .flash .title{font-family:'Space Grotesk'; font-size:26px; font-weight:700; color:#fff;}
+  .flash .sub{font-size:14px; color:rgba(255,255,255,.85); margin-top:4px;}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .grid.text-mode{grid-template-columns:1fr;}
+  .opt{
+    background:var(--card2); border:2px solid var(--line); border-radius:16px; padding:10px;
+    display:flex; flex-direction:column; align-items:center; cursor:pointer; text-align:center;
+  }
+  .opt.text-opt{flex-direction:row; align-items:center; text-align:left; padding:14px 16px; gap:10px;}
+  .opt img{width:100%; aspect-ratio:1/1; object-fit:contain; border-radius:10px; background:var(--card2); margin-bottom:8px;}
+  .opt .lbl{font-size:12.5px; font-weight:700; color:var(--text);}
+  .opt.text-opt .lbl{font-size:14px; line-height:1.4;}
+  .opt .k{font-size:10px; color:var(--muted); font-weight:700; letter-spacing:.08em; margin-bottom:2px;}
+  .opt.text-opt .k{margin:0; flex-shrink:0; width:20px; height:20px; border-radius:6px; background:rgba(55,54,54,.06); display:flex; align-items:center; justify-content:center;}
+  .opt.correct{border-color:var(--green); box-shadow:0 0 0 3px rgba(62,207,142,.25);}
+  .opt.wrong{border-color:var(--red); box-shadow:0 0 0 3px rgba(255,84,112,.25);}
+  .opt.disabled{pointer-events:none; opacity:.55;}
+  .opt.disabled.correct, .opt.disabled.wrong{opacity:1;}
+  .opt.bs-opt{padding:20px; border-radius:18px;}
+  .opt.bs-benar{background:rgba(62,207,142,.12); border-color:var(--green);}
+  .opt.bs-salah{background:rgba(255,84,112,.12); border-color:var(--red);}
+  .opt.bs-opt .lbl{font-size:17px;}
+  .grid.bs-mode{grid-template-columns:1fr; gap:14px;}
+
+  /* ---------- SLIDER ---------- */
+  .slider-wrap{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:24px 20px; text-align:center;}
+  .slider-value{font-family:'Space Grotesk'; font-size:44px; font-weight:700; color:var(--red); margin-bottom:4px;}
+  .slider-unit{font-size:13px; color:var(--muted); margin-bottom:18px;}
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:6px; border-radius:6px;
+    background:var(--line); outline:none; margin-bottom:8px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:26px; height:26px; border-radius:50%;
+    background:linear-gradient(135deg,var(--orange),var(--orange-d)); cursor:pointer;
+    box-shadow:0 4px 14px rgba(55,107,180,.45); border:3px solid var(--bg);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:26px; height:26px; border-radius:50%; border:3px solid var(--bg);
+    background:linear-gradient(135deg,var(--orange),var(--orange-d)); cursor:pointer;
+  }
+  .slider-range-labels{display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:20px;}
+
+  /* ---------- RESULT ---------- */
+  #result{align-items:center; text-align:center;}
+  .score-label{color:var(--muted); font-size:13px; letter-spacing:.14em; text-transform:uppercase; margin-top:8px;}
+  .score-num{font-family:'Space Grotesk'; font-size:56px; font-weight:700; color:var(--red); margin:2px 0 4px; line-height:1;}
+  .score-sub{color:var(--muted); font-size:13px; margin-bottom:18px;}
+  .kode-card{
+    width:100%; background:linear-gradient(135deg, var(--card2), var(--card)); border:1px dashed var(--cyan);
+    border-radius:16px; padding:16px; margin-bottom:20px;
+  }
+  .kode-card .lbl{font-size:11px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; margin-bottom:6px;}
+  .kode-card .kode{font-family:'Space Grotesk'; font-size:26px; font-weight:700; letter-spacing:.06em; color:var(--cyan);}
+  .kode-card .hint{font-size:12px; color:var(--muted); margin-top:6px;}
+
+  .podium{display:flex; align-items:flex-end; justify-content:center; gap:10px; width:100%; margin-bottom:18px;}
+  .pcol{flex:1; display:flex; flex-direction:column; align-items:center;}
+  .pcol .avatar{width:46px; height:46px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-family:'Space Grotesk'; font-size:18px; margin-bottom:8px; color:var(--text);}
+  .pcol .name{font-size:12px; font-weight:700; margin-bottom:2px; max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .pcol .pts{font-size:11px; color:var(--muted); margin-bottom:8px;}
+  .pcol .bar{width:100%; border-radius:10px 10px 0 0; display:flex; align-items:flex-start; justify-content:center; padding-top:6px; font-family:'Space Grotesk'; font-weight:700; font-size:13px; color:var(--text);}
+  .p1 .avatar{background:var(--gold);} .p1 .bar{background:linear-gradient(180deg,var(--gold),#B98E2E); height:88px;}
+  .p2 .avatar{background:var(--silver);} .p2 .bar{background:linear-gradient(180deg,var(--silver),#8C99A6); height:64px;}
+  .p3 .avatar{background:var(--bronze);} .p3 .bar{background:linear-gradient(180deg,var(--bronze),#A3672E); height:48px;}
+
+  .rank-me{font-size:13px; color:var(--muted); margin-bottom:18px;}
+  .rank-me b{color:var(--cyan);}
+  .result-actions{width:100%; display:flex; flex-direction:column; gap:10px;}
+  .loading{display:flex; align-items:center; justify-content:center; flex:1; color:var(--muted); font-size:14px; gap:10px;}
+  .spin{width:18px; height:18px; border-radius:50%; border:2px solid var(--line); border-top-color:var(--cyan); animation:sp 0.8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="brand"><span class="dot"></span><span id="igLabel">ELITECH.ID</span></div>
+  <div class="pulse-bar"></div>
+
+  <!-- LANDING -->
+  <div class="screen active" id="landing">
+    <h1>Bisa Kamu <span class="hl">Selamatkan Pasiennya?</span></h1>
+    <p class="sub">Tebak alat medis yang tepat, kumpulkan skor tertinggi, dan bawa pulang hadiahnya. 1 sesi, 60 detik.</p>
+
+    <div class="field"><label>Nama</label><input id="inNama" placeholder="Nama kamu" autocomplete="off"></div>
+    <div class="field"><label>Username Instagram</label><input id="inIg" placeholder="@username" autocomplete="off"></div>
+
+    <div class="follow-box">
+      <input type="checkbox" id="chkFollow">
+      <div class="txt">Saya sudah follow <a href="https://instagram.com/elitech.id" target="_blank" id="igLink">@elitech.id</a> di Instagram</div>
+    </div>
+
+    <button class="btn btn-primary" id="btnStart" disabled>Mulai Main</button>
+    <div class="stat-line" id="statLine"></div>
+    <div class="rules">Aturan main: <b>10 soal acak</b> dalam <b>60 detik</b>. Semakin banyak benar & semakin cepat, skor makin tinggi. Verifikasi pakai username IG — jadi 1 akun IG hanya bisa 1 kali ambil hadiah.</div>
+  </div>
+
+  <!-- GAME -->
+  <div class="screen" id="game">
+    <div class="topbar">
+      <div class="qcount">Soal <b id="qNow">1</b>/<span id="qTotal">10</span></div>
+      <div class="ring-wrap">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="27" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="6"/>
+          <circle id="ringProgress" cx="32" cy="32" r="27" fill="none" stroke="var(--cyan)" stroke-width="6" stroke-linecap="round" stroke-dasharray="169.6" stroke-dashoffset="0"/>
+        </svg>
+        <div class="num" id="timeNum">60</div>
+      </div>
+    </div>
+    <div class="dots" id="dots"></div>
+    <div class="qcard" id="qText">Memuat soal…</div>
+    <div class="grid" id="opts"></div>
+
+    <div class="slider-wrap" id="sliderWrap" style="display:none;">
+      <div class="slider-value"><span id="sliderVal">50</span><span class="slider-unit" id="sliderUnitInline"></span></div>
+      <input type="range" id="sliderInput" min="0" max="100" value="50">
+      <div class="slider-range-labels"><span id="sliderMinLbl">0</span><span id="sliderMaxLbl">100</span></div>
+      <button class="btn btn-primary" id="btnSliderSubmit">Kirim Jawaban</button>
+    </div>
+  </div>
+
+  <!-- FULL-SCREEN FEEDBACK -->
+  <div class="flash" id="flash">
+    <div class="icon" id="flashIcon">✅</div>
+    <div class="title" id="flashTitle">Benar!</div>
+    <div class="sub" id="flashSub">+100 poin</div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="screen" id="loading">
+    <div class="loading"><div class="spin"></div><span id="loadingTxt">Menyiapkan soal…</span></div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="result">
+    <div class="score-label">Skor Kamu</div>
+    <div class="score-num" id="scoreNum">0</div>
+    <div class="score-sub" id="scoreSub">0 dari 10 benar</div>
+
+    <div class="kode-card">
+      <div class="lbl">Kode Penukaran Hadiah</div>
+      <div class="kode" id="kodeText">EL-XXXXXX</div>
+      <div class="hint">Tunjukkan kode ini ke staff booth Elitech untuk ambil hadiah.</div>
+    </div>
+
+    <h3 style="align-self:flex-start; margin-bottom:14px; font-size:15px;">🏆 Leaderboard Booth</h3>
+    <div class="podium" id="podium"></div>
+    <div class="rank-me" id="rankMe"></div>
+
+    <div class="result-actions">
+      <button class="btn btn-primary" id="btnAgain">Main Lagi</button>
+      <a class="btn btn-ghost" style="text-decoration:none; display:block; text-align:center;" href="https://instagram.com/elitech.id" target="_blank">Buka Instagram @elitech.id</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============== KONFIGURASI ==============
+// GANTI dengan URL /exec hasil deploy Apps Script kamu.
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6o_6NSS7QiLsCPp-0kgTtvDW70ihWUH8-Fuv0QvwWWd99yBOvNGZ7NRbmzxYbVsiG/exec';
+
+// ============== STATE ==============
+var STATE = { config:null, questions:[], idx:0, benar:0, skor:0, timer:null, startMs:0, ended:false };
+var RING_C = 2 * Math.PI * 27;
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+// ============== JEMBATAN KE APPS SCRIPT (via fetch, bukan google.script.run) ==============
+// GET dipakai untuk aksi baca-saja: config, stats, startSession.
+// POST (Content-Type text/plain, supaya tidak memicu CORS preflight) dipakai
+// untuk aksi tulis: submitResult, redeemCode.
+var GET_ACTIONS = { getConfig: 'config', getStats: 'stats', startSession: 'startSession' };
+
+function callServer(fn, arg){
+  if (GET_ACTIONS[fn]) {
+    var url = APPS_SCRIPT_URL + '?action=' + GET_ACTIONS[fn];
+    return fetch(url)
+      .then(function(r){ return r.json(); })
+      .catch(function(err){
+        console.error('callServer GET gagal:', fn, err);
+        return mockServer(fn, arg); // fallback preview kalau backend belum siap / offline
+      });
+  }
+
+  if (fn === 'submitResult' || fn === 'redeemCode') {
+    var payload = fn === 'submitResult'
+      ? { action: 'submitResult', payload: arg }
+      : { action: 'redeemCode', kode: arg };
+    return fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    })
+      .then(function(r){ return r.json(); })
+      .catch(function(err){
+        console.error('callServer POST gagal:', fn, err);
+        return mockServer(fn, arg);
+      });
+  }
+
+  return Promise.resolve(mockServer(fn, arg));
+}
+
+function mockServer(fn, arg){
+  var bank = [
+    ['Pasien mengalami sesak napas. Alat apa yang paling tepat digunakan?', 'Oxygen Concentrator','Spirometer','Baby Scale','Stadiometer','Oxygen Concentrator'],
+    ['Alat apa untuk mengukur tinggi badan bayi posisi berbaring?', 'Stadiometer','Infantometer','Baby Scale','Fetal Doppler','Infantometer'],
+    ['Alat apa untuk mendengarkan detak jantung janin?', 'Spirometer','Fetal Doppler','Oxygen Concentrator','Baby Scale','Fetal Doppler'],
+    ['Alat apa untuk mengukur kapasitas & fungsi paru-paru?', 'Spirometer','Stadiometer','Infantometer','Fetal Doppler','Spirometer'],
+    ['Alat apa untuk menimbang berat badan bayi?', 'Baby Scale','Stadiometer','Spirometer','Oxygen Concentrator','Baby Scale']
+  ];
+  if (fn === 'startSession'){
+    var qs = [];
+    for (var i=0;i<10;i++){
+      var b = bank[i % bank.length];
+      var opts = [
+        {key:'A', gambar:'https://via.placeholder.com/300x300/132B4C/34D3C9?text='+encodeURIComponent(b[1]), nama:b[1]},
+        {key:'B', gambar:'https://via.placeholder.com/300x300/132B4C/34D3C9?text='+encodeURIComponent(b[2]), nama:b[2]},
+        {key:'C', gambar:'https://via.placeholder.com/300x300/132B4C/34D3C9?text='+encodeURIComponent(b[3]), nama:b[3]},
+        {key:'D', gambar:'https://via.placeholder.com/300x300/132B4C/34D3C9?text='+encodeURIComponent(b[4]), nama:b[4]}
+      ];
+      qs.push({id:i, tipe:'GAMBAR', jebakan:false, pertanyaan:b[0], pilihan:opts, jawabanBenar:b[5]});
+    }
+    qs[2] = {
+      id:'jbk1', tipe:'TEKS', jebakan:true,
+      pertanyaan:'Alat MANA yang TIDAK digunakan untuk mengukur oksigen dalam darah?',
+      pilihan:[
+        {key:'A', nama:'Pulse Oximeter'},
+        {key:'B', nama:'Patient Monitor'},
+        {key:'C', nama:'Thermometer'},
+        {key:'D', nama:'Blood Pressure & SpO2 Monitor'}
+      ],
+      jawabanBenar:'Thermometer'
+    };
+    qs[6] = {
+      id:'jbk2', tipe:'TEKS', jebakan:true,
+      pertanyaan:'Manakah pernyataan berikut yang BENAR?',
+      pilihan:[
+        {key:'A', nama:'Tekanan darah tinggi bisa tidak menimbulkan gejala sama sekali'},
+        {key:'B', nama:'Demam harus selalu diturunkan pakai selimut tebal'},
+        {key:'C', nama:'Vaksin flu cukup sekali seumur hidup'},
+        {key:'D', nama:'Mata minus bisa sembuh total dengan rajin makan wortel'}
+      ],
+      jawabanBenar:'Tekanan darah tinggi bisa tidak menimbulkan gejala sama sekali'
+    };
+    qs[4] = {
+      id:'bs1', tipe:'BENARSALAH', jebakan:false,
+      pertanyaan:'USG menggunakan gelombang suara, bukan radiasi seperti rontgen.',
+      pilihan:[{key:'A', nama:'Benar'}, {key:'B', nama:'Salah'}],
+      jawabanBenar:'Benar'
+    };
+    qs[8] = {
+      id:'sl1', tipe:'SLIDER', jebakan:false,
+      pertanyaan:'Kira-kira berapa denyut jantung normal orang dewasa saat istirahat (per menit)?',
+      sliderMin:40, sliderMax:160, sliderTarget:80, sliderUnit:'bpm'
+    };
+    return { config:{durasiDetik:60, igHandle:'@elitech.id', jumlahSoal:10, jumlahJebakan:2}, questions:qs };
+  }
+  if (fn === 'getConfig'){
+    return { durasiDetik:60, igHandle:'@elitech.id', jumlahSoal:10, jumlahJebakan:2 };
+  }
+  if (fn === 'getStats'){
+    return { totalPemain: 47 };
+  }
+  if (fn === 'submitResult'){
+    return { kode:'EL-DEMO01', leaderboard:[
+      {nama:'Rina', igUsername:'rina.k', skor:900},
+      {nama:arg.nama||'Kamu', igUsername:arg.igUsername||'kamu', skor:arg.skor},
+      {nama:'Budi', igUsername:'budipro', skor:500}
+    ].sort(function(a,b){return b.skor-a.skor;}), rank:2 };
+  }
+  return {};
+}
+
+// ============== LANDING ==============
+function validateLanding(){
+  var ok = document.getElementById('inNama').value.trim() &&
+           document.getElementById('inIg').value.trim() &&
+           document.getElementById('chkFollow').checked;
+  document.getElementById('btnStart').disabled = !ok;
+}
+['inNama','inIg'].forEach(function(id){ document.getElementById(id).addEventListener('input', validateLanding); });
+document.getElementById('chkFollow').addEventListener('change', validateLanding);
+
+document.getElementById('btnStart').addEventListener('click', function(){
+  show('loading');
+  callServer('startSession').then(function(res){
+    STATE.config = res.config;
+    STATE.questions = res.questions;
+    STATE.idx = 0; STATE.benar = 0; STATE.skor = 0; STATE.ended = false;
+    document.getElementById('qTotal').textContent = res.questions.length;
+    buildDots(res.questions.length);
+    startTimer(res.config.durasiDetik);
+    renderQuestion();
+    show('game');
+  });
+});
+
+// ============== GAME ==============
+function buildDots(n){
+  var el = document.getElementById('dots'); el.innerHTML = '';
+  for (var i=0;i<n;i++){ var d = document.createElement('i'); d.id='dot'+i; el.appendChild(d); }
+}
+
+function startTimer(totalSec){
+  STATE.startMs = Date.now();
+  var totalMs = totalSec * 1000;
+  clearInterval(STATE.timer);
+  STATE.timer = setInterval(function(){
+    var elapsed = Date.now() - STATE.startMs;
+    var remain = Math.max(0, totalMs - elapsed);
+    document.getElementById('timeNum').textContent = Math.ceil(remain/1000);
+    var frac = remain / totalMs;
+    document.getElementById('ringProgress').style.strokeDasharray = RING_C;
+    document.getElementById('ringProgress').style.strokeDashoffset = RING_C * (1-frac);
+    var ring = document.getElementById('ringProgress');
+    ring.style.stroke = remain < 10000 ? 'var(--red)' : 'var(--cyan)';
+    if (remain <= 0){ endGame(); }
+  }, 100);
+}
+
+var TYPE_LABEL = { GAMBAR:'Tebak Alat', TEKS:'Kuis', BENARSALAH:'Benar / Salah', SLIDER:'Tebak Angka' };
+
+function renderQuestion(){
+  var q = STATE.questions[STATE.idx];
+  document.getElementById('qNow').textContent = STATE.idx + 1;
+
+  var qTextEl = document.getElementById('qText');
+  qTextEl.innerHTML =
+    '<span class="type-badge">'+ (TYPE_LABEL[q.tipe] || 'Kuis') +'</span>' +
+    (q.jebakan ? '<span class="jebakan-badge">⚡ Jebakan!</span>' : '') +
+    '<span>'+q.pertanyaan+'</span>';
+
+  var wrap = document.getElementById('opts');
+  var sliderWrap = document.getElementById('sliderWrap');
+
+  if (q.tipe === 'SLIDER'){
+    wrap.style.display = 'none';
+    sliderWrap.style.display = 'block';
+    renderSlider(q);
+    return;
+  }
+  wrap.style.display = 'grid';
+  sliderWrap.style.display = 'none';
+
+  var isTeks = q.tipe === 'TEKS';
+  var isBS = q.tipe === 'BENARSALAH';
+  wrap.className = 'grid' + (isTeks ? ' text-mode' : '') + (isBS ? ' bs-mode' : '');
+  wrap.innerHTML = '';
+  q.pilihan.forEach(function(o){
+    var div = document.createElement('div');
+    var bsClass = isBS ? (' bs-opt ' + (o.nama.toLowerCase() === 'benar' ? 'bs-benar' : 'bs-salah')) : '';
+    div.className = 'opt' + (isTeks || isBS ? ' text-opt' : '') + bsClass;
+    div.innerHTML = isTeks || isBS
+      ? '<div class="k">'+(isBS ? (o.nama.toLowerCase()==='benar'?'✓':'✕') : o.key)+'</div><div class="lbl">'+o.nama+'</div>'
+      : '<div class="k">'+o.key+'</div><img src="'+o.gambar+'" alt=""><div class="lbl">'+o.nama+'</div>';
+    div.addEventListener('click', function(){ pickAnswer(o, div, q); });
+    wrap.appendChild(div);
+  });
+}
+
+// ============== SLIDER ==============
+function renderSlider(q){
+  var input = document.getElementById('sliderInput');
+  var val = document.getElementById('sliderVal');
+  var unit = document.getElementById('sliderUnitInline');
+  var btn = document.getElementById('btnSliderSubmit');
+
+  input.min = q.sliderMin; input.max = q.sliderMax;
+  input.value = Math.round((q.sliderMin + q.sliderMax) / 2);
+  input.disabled = false;
+  val.textContent = input.value;
+  unit.textContent = q.sliderUnit ? (' ' + q.sliderUnit) : '';
+  document.getElementById('sliderMinLbl').textContent = q.sliderMin + (q.sliderUnit ? ' '+q.sliderUnit : '');
+  document.getElementById('sliderMaxLbl').textContent = q.sliderMax + (q.sliderUnit ? ' '+q.sliderUnit : '');
+  btn.disabled = false;
+
+  input.oninput = function(){ val.textContent = input.value; };
+  btn.onclick = function(){ submitSlider(q, Number(input.value)); };
+}
+
+function submitSlider(q, guess){
+  if (STATE.ended) return;
+  document.getElementById('sliderInput').disabled = true;
+  document.getElementById('btnSliderSubmit').disabled = true;
+
+  var range = q.sliderMax - q.sliderMin;
+  var diff = Math.abs(guess - q.sliderTarget);
+  var diffRatio = range > 0 ? diff / range : 0;
+  var pts, levelCorrect, flashKind, title, sub;
+
+  if (diffRatio <= 0.05){ pts = 100; levelCorrect = true; flashKind = 'correct'; title = 'Tepat Sekali!'; sub = '+100 poin'; }
+  else if (diffRatio <= 0.20){ pts = 60; levelCorrect = true; flashKind = 'partial'; title = 'Lumayan Dekat!'; sub = '+60 poin'; }
+  else { pts = 20; levelCorrect = false; flashKind = 'wrong'; title = 'Meleset Jauh'; sub = 'Jawaban: '+q.sliderTarget+' '+(q.sliderUnit||''); }
+
+  STATE.skor += pts;
+  if (levelCorrect) STATE.benar++;
+  document.getElementById('dot'+STATE.idx).classList.add('done');
+  showFlash(flashKind, title, sub);
+
+  setTimeout(function(){
+    STATE.idx++;
+    if (STATE.idx >= STATE.questions.length){ endGame(); }
+    else { renderQuestion(); }
+  }, 550);
+}
+
+function pickAnswer(chosen, el, q){
+  if (STATE.ended) return;
+  document.querySelectorAll('.opt').forEach(function(o){ o.classList.add('disabled'); });
+  var isCorrect = chosen.nama === q.jawabanBenar;
+  el.classList.add(isCorrect ? 'correct' : 'wrong');
+  if (!isCorrect){
+    document.querySelectorAll('.opt').forEach(function(o){
+      if (o.querySelector('.lbl').textContent === q.jawabanBenar) o.classList.add('correct');
+    });
+  } else {
+    STATE.benar++; STATE.skor += 100;
+  }
+  document.getElementById('dot'+STATE.idx).classList.add('done');
+  showFlash(isCorrect ? 'correct' : 'wrong', isCorrect ? 'Benar!' : 'Kurang Tepat', isCorrect ? '+100 poin' : 'Yuk lanjut soal berikutnya');
+  setTimeout(function(){
+    STATE.idx++;
+    if (STATE.idx >= STATE.questions.length){ endGame(); }
+    else { renderQuestion(); }
+  }, 550);
+}
+
+function showFlash(kind, title, sub){
+  var icons = { correct:'✅', partial:'👍', wrong:'❌' };
+  var flash = document.getElementById('flash');
+  flash.className = 'flash show ' + kind;
+  document.getElementById('flashIcon').textContent = icons[kind] || '✅';
+  document.getElementById('flashTitle').textContent = title;
+  document.getElementById('flashSub').textContent = sub;
+  setTimeout(function(){ flash.classList.remove('show'); }, 420);
+}
+
+function endGame(){
+  if (STATE.ended) return;
+  STATE.ended = true;
+  clearInterval(STATE.timer);
+  var remainMs = Math.max(0, STATE.config.durasiDetik*1000 - (Date.now()-STATE.startMs));
+  show('loading');
+  document.getElementById('loadingTxt').textContent = 'Menyimpan skor…';
+  var nama = document.getElementById('inNama').value.trim();
+  var ig = document.getElementById('inIg').value.trim();
+  callServer('submitResult', { nama:nama, igUsername:ig, skor:STATE.skor, jumlahBenar:STATE.benar, sisaWaktuMs:remainMs })
+    .then(function(res){ renderResult(res, nama); show('result'); });
+}
+
+function renderResult(res, nama){
+  document.getElementById('scoreNum').textContent = STATE.skor;
+  document.getElementById('scoreSub').textContent = STATE.benar + ' dari ' + STATE.questions.length + ' benar';
+  document.getElementById('kodeText').textContent = res.kode;
+
+  var top3 = res.leaderboard.slice(0,3);
+  var order = [1,0,2]; // render posisi 2-1-3 secara visual
+  var podium = document.getElementById('podium'); podium.innerHTML='';
+  var classes = ['p2','p1','p3'];
+  order.forEach(function(i, idx){
+    var p = top3[i];
+    var col = document.createElement('div');
+    col.className = 'pcol ' + classes[idx];
+    if (!p){ col.style.visibility='hidden'; podium.appendChild(col); return; }
+    var initial = (p.nama||'?').charAt(0).toUpperCase();
+    col.innerHTML = '<div class="avatar">'+initial+'</div><div class="name">'+p.nama+'</div><div class="pts">'+p.skor+' pts</div><div class="bar">'+(i+1)+'</div>';
+    podium.appendChild(col);
+  });
+
+  var rankEl = document.getElementById('rankMe');
+  rankEl.innerHTML = res.rank ? ('Peringkat kamu saat ini: <b>#'+res.rank+'</b>') : '';
+}
+
+document.getElementById('btnAgain').addEventListener('click', function(){
+  show('landing');
+});
+
+// init IG handle label + social proof
+callServer('getConfig').then(function(cfg){
+  if (!cfg || !cfg.igHandle) return;
+  var handle = cfg.igHandle.replace(/^@/, '');
+  document.getElementById('igLabel').textContent = handle.toUpperCase();
+  document.getElementById('igLink').textContent = '@' + handle;
+  document.getElementById('igLink').href = 'https://instagram.com/' + handle;
+});
+
+callServer('getStats').then(function(stats){
+  if (!stats) return;
+  var el = document.getElementById('statLine');
+  if (stats.totalPemain > 0){
+    el.innerHTML = '<span class="avatars"><span></span><span></span><span></span></span> Sudah <b style="color:var(--text)">'+stats.totalPemain+'</b> orang ikut main';
+  }
+});
+</script>
+</body>
+</html>

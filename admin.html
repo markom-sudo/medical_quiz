@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redeem Hadiah — Elitech Expo Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#0A1628; --card:#0F2440; --orange:#FF7A3D; --cyan:#34D3C9; --green:#3ECF8E; --red:#FF5470; --text:#F4F7FB; --muted:#8FA3BF; --line:rgba(255,255,255,.08); }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; display:flex; justify-content:center;}
+  .wrap{width:100%; max-width:420px; padding:24px 18px;}
+  h1{font-family:'Space Grotesk'; font-size:20px; margin:0 0 4px;}
+  p.sub{color:var(--muted); font-size:13px; margin:0 0 20px;}
+  input{width:100%; padding:14px; border-radius:12px; border:1px solid var(--line); background:var(--card); color:var(--text); font-size:20px; font-family:'Space Grotesk'; text-transform:uppercase; letter-spacing:.05em; text-align:center;}
+  input:focus{outline:none; border-color:var(--cyan);}
+  button{width:100%; margin-top:12px; padding:15px; border:none; border-radius:12px; background:linear-gradient(135deg,var(--orange),#E5601F); color:#fff; font-family:'Space Grotesk'; font-weight:700; font-size:15px; cursor:pointer;}
+  button:disabled{opacity:.5; cursor:default;}
+  .result{margin-top:20px; padding:16px; border-radius:14px; display:none;}
+  .result.ok{display:block; background:rgba(62,207,142,.12); border:1px solid var(--green);}
+  .result.used{display:block; background:rgba(255,200,87,.12); border:1px solid #FFC857;}
+  .result.err{display:block; background:rgba(255,84,112,.12); border:1px solid var(--red);}
+  .result .tag{font-weight:700; font-size:14px; margin-bottom:6px;}
+  .result .detail{font-size:13px; color:var(--muted); line-height:1.6;}
+  .result .detail b{color:var(--text);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Verifikasi Kode Hadiah</h1>
+  <p class="sub">Untuk staff booth. Masukkan kode dari layar pengunjung (contoh: EL-3F7K2Q).</p>
+  <input id="kode" placeholder="EL-XXXXXX" autocomplete="off" autofocus>
+  <button id="btnCek">Cek & Tukar Hadiah</button>
+  <div class="result" id="out"></div>
+</div>
+<script>
+// GANTI dengan URL /exec hasil deploy Apps Script kamu (sama seperti di index.html).
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6o_6NSS7QiLsCPp-0kgTtvDW70ihWUH8-Fuv0QvwWWd99yBOvNGZ7NRbmzxYbVsiG/exec';
+
+document.getElementById('kode').addEventListener('keyup', function(e){
+  this.value = this.value.toUpperCase();
+  if (e.key === 'Enter') document.getElementById('btnCek').click();
+});
+
+document.getElementById('btnCek').addEventListener('click', function(){
+  var kode = document.getElementById('kode').value.trim();
+  if (!kode) return;
+  var out = document.getElementById('out');
+  var btn = document.getElementById('btnCek');
+  out.className = 'result'; out.innerHTML = 'Mengecek…'; out.style.display='block';
+  btn.disabled = true;
+
+  function render(res){
+    btn.disabled = false;
+    if (res.status === 'berhasil'){
+      out.className = 'result ok';
+      out.innerHTML = '<div class="tag">✅ Hadiah berhasil ditukar</div><div class="detail"><b>'+res.nama+'</b> — skor '+res.skor+' ('+res.jumlahBenar+' benar)</div>';
+    } else if (res.status === 'sudah_redeem'){
+      out.className = 'result used';
+      out.innerHTML = '<div class="tag">⚠️ Kode sudah pernah ditukar</div><div class="detail"><b>'+res.nama+'</b> — skor '+res.skor+'<br>Ditukar pada: '+res.waktuRedeem+'</div>';
+    } else {
+      out.className = 'result err';
+      out.innerHTML = '<div class="tag">❌ Kode tidak ditemukan</div><div class="detail">Cek kembali penulisan kodenya.</div>';
+    }
+  }
+
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'redeemCode', kode: kode })
+  })
+    .then(function(r){ return r.json(); })
+    .then(render)
+    .catch(function(err){
+      btn.disabled = false;
+      out.className='result err';
+      out.innerHTML='<div class="tag">Gagal terhubung ke server</div><div class="detail">Cek koneksi internet, lalu coba lagi.</div>';
+      console.error('redeemCode gagal:', err);
+    });
+});
+</script>
+</body>
+</html>
