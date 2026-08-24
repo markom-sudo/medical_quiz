@@ -5,7 +5,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Elitech Expo Quiz</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://i.ibb.co.com">
+<link rel="dns-prefetch" href="https://i.ibb.co.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -516,17 +517,47 @@ document.getElementById('chkFollow').addEventListener('change', validateLanding)
 
 document.getElementById('btnStart').addEventListener('click', function(){
   show('loading');
+  document.getElementById('loadingTxt').textContent = 'Menyiapkan soal…';
   callServer('startSession').then(function(res){
     STATE.config = res.config;
     STATE.questions = res.questions;
     STATE.idx = 0; STATE.benar = 0; STATE.skor = 0; STATE.ended = false;
     document.getElementById('qTotal').textContent = res.questions.length;
     buildDots(res.questions.length);
-    startTimer(res.config.durasiDetik);
-    renderQuestion();
-    show('game');
+
+    document.getElementById('loadingTxt').textContent = 'Menyiapkan gambar…';
+    preloadQuestionImages(res.questions).then(function(){
+      startTimer(res.config.durasiDetik); // timer BARU mulai di sini
+      renderQuestion();
+      show('game');
+    });
   });
 });
+
+
+function preloadQuestionImages(questions, maxWaitMs){
+  maxWaitMs = maxWaitMs || 4000; // batas nunggu, biar loading screen gak nyangkut lama
+  var urls = [];
+  questions.forEach(function(q){
+    if (q.gambarSoal) urls.push(q.gambarSoal);
+    if (q.pilihan) q.pilihan.forEach(function(o){ if (o.gambar) urls.push(o.gambar); });
+  });
+  if (!urls.length) return Promise.resolve();
+
+  var loaders = urls.map(function(url){
+    return new Promise(function(resolve){
+      var img = new Image();
+      img.onload = resolve;
+      img.onerror = resolve; // 1 gambar gagal gak nge-block yang lain
+      img.src = url;
+    });
+  });
+
+  return Promise.race([
+    Promise.all(loaders),
+    new Promise(function(resolve){ setTimeout(resolve, maxWaitMs); })
+  ]);
+}
 
 // ============== IMAGE LOADER AMAN ==============
 
