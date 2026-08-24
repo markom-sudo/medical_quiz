@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+<base target="_top">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Elitech Expo Quiz</title>
@@ -198,6 +199,16 @@
   .kode-card .kode{font-family:'Space Grotesk'; font-size:26px; font-weight:700; letter-spacing:.06em; color:var(--cyan);}
   .kode-card .hint{font-size:12px; color:var(--muted); margin-top:6px;}
 
+  .congrats-banner{
+    width:100%; background:linear-gradient(135deg,var(--gold),#C4901F); border-radius:16px; padding:16px;
+    margin-bottom:18px; display:none; align-items:center; gap:12px; text-align:left;
+    animation:popIn .5s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  .congrats-banner.show{display:flex;}
+  .congrats-banner .emoji{font-size:32px; flex-shrink:0;}
+  .congrats-banner .txt b{display:block; color:#fff; font-family:'Space Grotesk'; font-size:15px;}
+  .congrats-banner .txt span{color:rgba(255,255,255,.9); font-size:12.5px;}
+
   .lb-list{width:100%; display:flex; flex-direction:column; gap:8px; margin-bottom:6px;}
   .lb-row{
     display:flex; align-items:center; gap:12px; background:var(--card); border:1px solid var(--line);
@@ -216,9 +227,10 @@
   .lb-rank.top3{background:linear-gradient(155deg,var(--bronze),#A3672E); color:#fff;}
   .lb-avatar{
     width:34px; height:34px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
-    font-weight:700; font-family:'Space Grotesk'; font-size:14px; color:#fff;
+    font-weight:700; font-family:'Space Grotesk'; font-size:14px; color:#fff; overflow:hidden;
     background:linear-gradient(135deg,var(--quad-0),var(--quad-1));
   }
+  .lb-avatar img{width:100%; height:100%; object-fit:cover;}
   .lb-info{flex:1; min-width:0;}
   .lb-name{font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .lb-pts{font-family:'Space Grotesk'; font-weight:700; font-size:14px; color:var(--text); flex-shrink:0;}
@@ -302,6 +314,11 @@
       <div class="hint">Tunjukkan kode ini ke staff booth Elitech untuk ambil hadiah.</div>
     </div>
 
+    <div class="congrats-banner" id="congratsBanner">
+      <div class="emoji" id="congratsEmoji">🎉</div>
+      <div class="txt"><b id="congratsTitle">Selamat!</b><span id="congratsSub">Kamu masuk 3 besar!</span></div>
+    </div>
+
     <h3 style="align-self:flex-start; margin-bottom:14px; font-size:15px;">🏆 Leaderboard Booth</h3>
     <div class="lb-list" id="lbList"></div>
     <div class="rank-me" id="rankMe"></div>
@@ -315,7 +332,6 @@
 
 <script>
 // ============== KONFIGURASI ==============
-// GANTI dengan URL /exec hasil deploy Apps Script kamu.
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6o_6NSS7QiLsCPp-0kgTtvDW70ihWUH8-Fuv0QvwWWd99yBOvNGZ7NRbmzxYbVsiG/exec';
 
 // ============== STATE ==============
@@ -327,10 +343,6 @@ function show(id){
   document.getElementById(id).classList.add('active');
 }
 
-// ============== JEMBATAN KE APPS SCRIPT (via fetch, bukan google.script.run) ==============
-// GET dipakai untuk aksi baca-saja: config, stats, startSession.
-// POST (Content-Type text/plain, supaya tidak memicu CORS preflight) dipakai
-// untuk aksi tulis: submitResult, redeemCode.
 var GET_ACTIONS = { getConfig: 'config', getStats: 'stats', startSession: 'startSession' };
 
 function callServer(fn, arg){
@@ -340,7 +352,7 @@ function callServer(fn, arg){
       .then(function(r){ return r.json(); })
       .catch(function(err){
         console.error('callServer GET gagal:', fn, err);
-        return mockServer(fn, arg); // fallback preview kalau backend belum siap / offline
+        return mockServer(fn, arg);
       });
   }
 
@@ -419,7 +431,12 @@ function mockServer(fn, arg){
     return { config:{durasiDetik:60, igHandle:'@elitech.id', jumlahSoal:10, jumlahJebakan:2}, questions:qs };
   }
   if (fn === 'getConfig'){
-    return { durasiDetik:60, igHandle:'@elitech.id', jumlahSoal:10, jumlahJebakan:2 };
+    return { durasiDetik:60, igHandle:'@elitech.id', jumlahSoal:10, jumlahJebakan:2,
+      iconRank1:'https://i.ibb.co.com/mdFwJNP/Artboard-3.png',
+      iconRank2:'https://i.ibb.co.com/XfsSKTp1/Artboard-1.png',
+      iconRank3:'https://i.ibb.co.com/qLWMrFxj/Artboard-2.png',
+      iconLainnya:['https://i.ibb.co.com/4nndwqr2/Artboard-4.png','https://i.ibb.co.com/9fRSkYX/Artboard-5.png','https://i.ibb.co.com/qL9wxf1h/Artboard-6.png','https://i.ibb.co.com/zDZsBQm/Artboard-7.png','https://i.ibb.co.com/rGLkjmk3/Artboard-8.png']
+    };
   }
   if (fn === 'getStats'){
     return { totalPemain: 47 };
@@ -634,12 +651,19 @@ function animateCountUp(el, target, duration){
   function step(ts){
     if (!startTime) startTime = ts;
     var progress = Math.min(1, (ts - startTime) / duration);
-    var eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    var eased = 1 - Math.pow(1 - progress, 3);
     el.textContent = Math.round(start + (target - start) * eased);
     if (progress < 1) { requestAnimationFrame(step); }
     else { el.textContent = target; el.classList.add('pulse'); setTimeout(function(){ el.classList.remove('pulse'); }, 250); }
   }
   requestAnimationFrame(step);
+}
+
+// Pilih 1 icon acak dari pool "lainnya" untuk baris leaderboard di luar 3 besar.
+// Dipilih ulang tiap kali render supaya tidak perlu disimpan di sheet per pemain.
+function iconAcakLainnya_(pool){
+  if (!pool || pool.length === 0) return '';
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function renderResult(res, nama){
@@ -649,21 +673,39 @@ function renderResult(res, nama){
   document.getElementById('scoreSub').textContent = STATE.benar + ' dari ' + STATE.questions.length + ' benar';
   document.getElementById('kodeText').textContent = res.kode;
 
+  // Banner "Selamat!" kalau pemain masuk 3 besar
+  var banner = document.getElementById('congratsBanner');
+  if (res.rank && res.rank <= 3) {
+    var rankWord = res.rank === 1 ? 'Juara 1' : (res.rank === 2 ? 'Juara 2' : 'Juara 3');
+    document.getElementById('congratsTitle').textContent = 'Selamat, ' + rankWord + '!';
+    document.getElementById('congratsSub').textContent = 'Kamu masuk 3 besar leaderboard booth 🎉';
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+
+  var cfg = STATE.config || {};
+  var rankIcons = [cfg.iconRank1, cfg.iconRank2, cfg.iconRank3];
+  var iconLainnya = cfg.iconLainnya || [];
+
   var igMe = document.getElementById('inIg').value.trim().toLowerCase().replace(/^@/, '');
   var top10 = res.leaderboard.slice(0, 10);
   var lbList = document.getElementById('lbList'); lbList.innerHTML = '';
   var rankClass = ['top1', 'top2', 'top3'];
-  var rankIcons = [STATE.config && STATE.config.iconRank1, STATE.config && STATE.config.iconRank2, STATE.config && STATE.config.iconRank3];
   top10.forEach(function(p, i){
     var row = document.createElement('div');
     var isMe = p.igUsername && String(p.igUsername).trim().toLowerCase().replace(/^@/, '') === igMe;
     row.className = 'lb-row' + (isMe ? ' me' : '');
     var initial = (p.nama || '?').charAt(0).toUpperCase();
     var rankCls = rankClass[i] || '';
-    var rankInner = (rankIcons[i]) ? '<img src="'+rankIcons[i]+'" alt="" style="width:100%;height:100%;object-fit:contain;">' : (i + 1);
+    var rankInner = i + 1;
+
+    var avatarIcon = i < 3 ? rankIcons[i] : iconAcakLainnya_(iconLainnya);
+    var avatarInner = avatarIcon ? '<img src="'+avatarIcon+'" alt="">' : initial;
+
     row.innerHTML =
       '<div class="lb-rank ' + rankCls + '">' + rankInner + '</div>' +
-      '<div class="lb-avatar">' + initial + '</div>' +
+      '<div class="lb-avatar">' + avatarInner + '</div>' +
       '<div class="lb-info"><div class="lb-name">' + p.nama + '</div></div>' +
       '<div class="lb-pts">' + p.skor + '</div>';
     lbList.appendChild(row);
@@ -679,6 +721,11 @@ document.getElementById('btnAgain').addEventListener('click', function(){
 
 // init IG handle label + social proof
 callServer('getConfig').then(function(cfg){
+  STATE.config = STATE.config || {};
+  if (cfg) {
+    STATE.config.iconRank1 = cfg.iconRank1; STATE.config.iconRank2 = cfg.iconRank2;
+    STATE.config.iconRank3 = cfg.iconRank3; STATE.config.iconLainnya = cfg.iconLainnya;
+  }
   if (!cfg || !cfg.igHandle) return;
   var handle = cfg.igHandle.replace(/^@/, '');
   document.getElementById('igLabel').textContent = handle.toUpperCase();
