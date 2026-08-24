@@ -92,6 +92,9 @@
     display:flex; align-items:center; gap:10px; position:relative;
     animation:slideUpFade .32s cubic-bezier(.2,.8,.3,1) both;
   }
+  /* Saat soal punya GAMBAR_SOAL, kartu jadi kolom: gambar di atas, teks pertanyaan di bawah */
+  .qcard.has-img{flex-direction:column; align-items:stretch; padding-top:26px;}
+  .qcard-img{width:100%; max-height:220px; object-fit:cover; border-radius:12px; background:#fff; margin-bottom:12px;}
   .jebakan-badge{
     position:absolute; top:-10px; right:12px; background:linear-gradient(135deg,#F5C25A,var(--gold));
     color:var(--text); font-family:'Space Grotesk'; font-weight:700; font-size:10.5px;
@@ -144,9 +147,10 @@
   .opt.img-opt.correct{border-color:var(--quad-3); box-shadow:0 0 0 3px rgba(47,199,124,.25); animation:shrinkPop .35s ease;}
   .opt.img-opt.wrong{border-color:var(--quad-1); box-shadow:0 0 0 3px rgba(255,84,112,.25); animation:shrinkPop .35s ease;}
 
-  /* Tombol jawaban TEKS: warna solid penuh ala quadrant */
-  .opt.text-opt{flex-direction:row; align-items:center; text-align:left; padding:16px; gap:10px; border:none; color:#fff; min-height:64px;}
-  .opt.text-opt .lbl{font-size:14.5px; line-height:1.35; color:#fff; font-weight:700;}
+  /* Tombol jawaban TEKS: warna solid penuh ala quadrant, tanpa badge huruf —
+     konten (angka/teks) diposisikan center supaya enak dibaca sebagai satu-satunya isi tombol. */
+  .opt.text-opt{flex-direction:row; align-items:center; justify-content:center; text-align:center; padding:16px; gap:10px; border:none; color:#fff; min-height:64px;}
+  .opt.text-opt .lbl{font-size:16px; line-height:1.35; color:#fff; font-weight:700;}
   .opt.text-opt .k{background:rgba(255,255,255,.25); color:#fff; flex-shrink:0;}
   .opt.text-opt.q0{background:linear-gradient(155deg,var(--quad-0),var(--quad-0-d));}
   .opt.text-opt.q1{background:linear-gradient(155deg,var(--quad-1),var(--quad-1-d));}
@@ -168,6 +172,7 @@
 
   /* ---------- SLIDER ---------- */
   .slider-wrap{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:24px 20px; text-align:center;}
+  .slider-img{width:100%; max-height:200px; object-fit:cover; border-radius:14px; margin-bottom:16px;}
   .slider-value{font-family:'Space Grotesk'; font-size:44px; font-weight:700; color:var(--red); margin-bottom:4px;}
   .slider-unit{font-size:13px; color:var(--muted); margin-bottom:18px;}
   input[type=range]{
@@ -283,6 +288,7 @@
     <div class="grid" id="opts"></div>
 
     <div class="slider-wrap" id="sliderWrap" style="display:none;">
+      <img class="slider-img" id="sliderImg" src="" alt="" style="display:none;">
       <div class="slider-value"><span id="sliderVal">50</span><span class="slider-unit" id="sliderUnitInline"></span></div>
       <input type="range" id="sliderInput" min="0" max="100" value="50">
       <div class="slider-range-labels"><span id="sliderMinLbl">0</span><span id="sliderMaxLbl">100</span></div>
@@ -428,6 +434,19 @@ function mockServer(fn, arg){
       pertanyaan:'Kira-kira berapa denyut jantung normal orang dewasa saat istirahat (per menit)?',
       sliderMin:40, sliderMax:160, sliderTarget:80, sliderUnit:'bpm'
     };
+    // Contoh soal TEKS dengan jawaban angka + gambar di atas pertanyaan (GAMBAR_SOAL)
+    qs[9] = {
+      id:'gs1', tipe:'TEKS', jebakan:false,
+      pertanyaan:'Berapa jumlah tulang pada tubuh orang dewasa?',
+      gambarSoal:'https://via.placeholder.com/400x260/132B4C/34D3C9?text=Kerangka+Manusia',
+      pilihan:[
+        {key:'A', nama:'206'},
+        {key:'B', nama:'300'},
+        {key:'C', nama:'150'},
+        {key:'D', nama:'250'}
+      ],
+      jawabanBenar:'206'
+    };
     return { config:{durasiDetik:60, igHandle:'@elitech.id', jumlahSoal:10, jumlahJebakan:2}, questions:qs };
   }
   if (fn === 'getConfig'){
@@ -507,10 +526,17 @@ function renderQuestion(){
   var qTextEl = document.getElementById('qText');
   var diffLabel = { MUDAH:'Mudah', SEDANG:'Sedang', SULIT:'Sulit' }[q.kesulitan] || 'Sedang';
   var diffCls = (q.kesulitan || 'SEDANG').toLowerCase();
+
+  // GAMBAR_SOAL: gambar opsional di atas teks pertanyaan (berlaku untuk semua tipe
+  // KECUALI 'GAMBAR', karena tipe itu sudah punya gambar di tiap opsi jawaban).
+  var punyaGambarSoal = q.gambarSoal && q.tipe !== 'GAMBAR' && q.tipe !== 'SLIDER';
+  qTextEl.classList.toggle('has-img', !!punyaGambarSoal);
+
   qTextEl.innerHTML =
     '<span class="type-badge">'+ (TYPE_LABEL[q.tipe] || 'Kuis') +'</span>' +
     '<span class="diff-badge '+diffCls+'">'+diffLabel+'</span>' +
     (q.jebakan ? '<span class="jebakan-badge">⚡ Jebakan!</span>' : '') +
+    (punyaGambarSoal ? '<img class="qcard-img" src="'+q.gambarSoal+'" alt="">' : '') +
     '<span>'+q.pertanyaan+'</span>';
 
   var wrap = document.getElementById('opts');
@@ -536,9 +562,16 @@ function renderQuestion(){
     var quadClass = !isBS ? (' ' + QUAD[idx % 4]) : '';
     var typeClass = isTeks || isBS ? ' text-opt' : ' img-opt';
     div.className = 'opt' + typeClass + quadClass + bsClass;
-    div.innerHTML = isTeks || isBS
-      ? '<div class="k">'+(isBS ? (o.nama.toLowerCase()==='benar'?'✓':'✕') : o.key)+'</div><div class="lbl">'+o.nama+'</div>'
-      : '<div class="k">'+o.key+'</div><img src="'+o.gambar+'" alt=""><div class="lbl">'+o.nama+'</div>';
+    // Sengaja TANPA badge huruf A/B/C/D — supaya tidak bisa "dihafal polanya" kalau
+    // jawaban benar sering ada di huruf yang sama. Warna (quad-0..3) tetap dipakai
+    // sebagai penanda visual posisi, jadi pemain masih bisa bilang "aku pilih biru".
+    // Khusus BENARSALAH tetap pakai simbol ✓/✕ karena itu representasi makna teks
+    // (Benar/Salah), bukan identitas jawaban yang bisa dihafal per soal.
+    div.innerHTML = isBS
+      ? '<div class="k">'+(o.nama.toLowerCase()==='benar'?'✓':'✕')+'</div><div class="lbl">'+o.nama+'</div>'
+      : isTeks
+        ? '<div class="lbl">'+o.nama+'</div>'
+        : '<img src="'+o.gambar+'" alt=""><div class="lbl">'+o.nama+'</div>';
     div.addEventListener('click', function(){ pickAnswer(o, div, q); });
     wrap.appendChild(div);
   });
@@ -550,6 +583,15 @@ function renderSlider(q){
   var val = document.getElementById('sliderVal');
   var unit = document.getElementById('sliderUnitInline');
   var btn = document.getElementById('btnSliderSubmit');
+  var img = document.getElementById('sliderImg');
+
+  if (q.gambarSoal){
+    img.src = q.gambarSoal;
+    img.style.display = 'block';
+  } else {
+    img.style.display = 'none';
+    img.src = '';
+  }
 
   input.min = q.sliderMin; input.max = q.sliderMax;
   input.value = Math.round((q.sliderMin + q.sliderMax) / 2);
