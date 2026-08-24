@@ -170,6 +170,40 @@
   .opt.bs-opt.wrong{filter:grayscale(.6);}
   .grid.bs-mode{grid-template-columns:1fr; gap:14px;}
 
+.qcard-content{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+}
+
+.qcard-question{
+  display:block;
+  width:100%;
+}
+
+.qcard-img{
+  display:block;
+}
+
+.qcard-img.img-error{
+  display:none !important;
+}
+
+.opt.img-opt.image-missing{
+  min-height:140px;
+  justify-content:center;
+}
+
+.opt.img-opt.image-missing .lbl{
+  font-size:14px;
+  padding:12px 4px;
+}
+
+.opt.img-opt img.img-error{
+  display:none !important;
+}
+
   /* ---------- SLIDER ---------- */
   .slider-wrap{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:24px 20px; text-align:center;}
   .slider-img{width:100%; max-height:200px; object-fit:cover; border-radius:14px; margin-bottom:16px;}
@@ -494,6 +528,67 @@ document.getElementById('btnStart').addEventListener('click', function(){
   });
 });
 
+// ============== IMAGE LOADER AMAN ==============
+
+function safeImageUrl(url) {
+  if (!url) return '';
+
+  var s = String(url).trim();
+
+  // Blokir URL kosong
+  if (!s) return '';
+
+  // Hanya izinkan http/https
+  if (!/^https?:\/\//i.test(s)) {
+    return '';
+  }
+
+  return s;
+}
+
+
+function createSafeImage(url, alt, className, onErrorCallback) {
+  var img = document.createElement('img');
+
+  img.className = className || '';
+  img.alt = alt || '';
+  img.loading = 'eager';
+  img.decoding = 'async';
+
+  var safeUrl = safeImageUrl(url);
+
+  if (!safeUrl) {
+    img.style.display = 'none';
+
+    if (typeof onErrorCallback === 'function') {
+      onErrorCallback(img);
+    }
+
+    return img;
+  }
+
+  img.onload = function () {
+    img.classList.remove('img-error');
+    img.classList.add('img-loaded');
+  };
+
+  img.onerror = function () {
+    console.warn('Gagal memuat gambar:', safeUrl);
+
+    img.removeAttribute('src');
+    img.style.display = 'none';
+    img.classList.add('img-error');
+
+    if (typeof onErrorCallback === 'function') {
+      onErrorCallback(img);
+    }
+  };
+
+  img.src = safeUrl;
+
+  return img;
+}
+
 // ============== GAME ==============
 function buildDots(n){
   var el = document.getElementById('dots'); el.innerHTML = '';
@@ -533,11 +628,32 @@ function renderQuestion(){
   qTextEl.classList.toggle('has-img', !!punyaGambarSoal);
 
   qTextEl.innerHTML =
-    '<span class="type-badge">'+ (TYPE_LABEL[q.tipe] || 'Kuis') +'</span>' +
-    '<span class="diff-badge '+diffCls+'">'+diffLabel+'</span>' +
+    '<span class="type-badge">' + (TYPE_LABEL[q.tipe] || 'Kuis') + '</span>' +
+    '<span class="diff-badge ' + diffCls + '">' + diffLabel + '</span>' +
     (q.jebakan ? '<span class="jebakan-badge">⚡ Jebakan!</span>' : '') +
-    (punyaGambarSoal ? '<img class="qcard-img" src="'+q.gambarSoal+'" alt="">' : '') +
-    '<span>'+q.pertanyaan+'</span>';
+    '<div class="qcard-content"></div>';
+
+  var qContent = qTextEl.querySelector('.qcard-content');
+
+  if (punyaGambarSoal) {
+    var questionImg = createSafeImage(
+      q.gambarSoal,
+      'Gambar soal',
+      'qcard-img',
+      function () {
+        // Jika gambar gagal, soal tetap tampil normal.
+        qTextEl.classList.remove('has-img');
+      }
+    );
+
+    qContent.appendChild(questionImg);
+  }
+
+  var questionText = document.createElement('span');
+  questionText.className = 'qcard-question';
+  questionText.textContent = q.pertanyaan || '';
+
+  qContent.appendChild(questionText);
 
   var wrap = document.getElementById('opts');
   var sliderWrap = document.getElementById('sliderWrap');
@@ -558,21 +674,78 @@ function renderQuestion(){
   var QUAD = ['q0','q1','q2','q3'];
   q.pilihan.forEach(function(o, idx){
     var div = document.createElement('div');
-    var bsClass = isBS ? (' bs-opt ' + (o.nama.toLowerCase() === 'benar' ? 'bs-benar' : 'bs-salah')) : '';
-    var quadClass = !isBS ? (' ' + QUAD[idx % 4]) : '';
-    var typeClass = isTeks || isBS ? ' text-opt' : ' img-opt';
-    div.className = 'opt' + typeClass + quadClass + bsClass;
-    // Sengaja TANPA badge huruf A/B/C/D — supaya tidak bisa "dihafal polanya" kalau
-    // jawaban benar sering ada di huruf yang sama. Warna (quad-0..3) tetap dipakai
-    // sebagai penanda visual posisi, jadi pemain masih bisa bilang "aku pilih biru".
-    // Khusus BENARSALAH tetap pakai simbol ✓/✕ karena itu representasi makna teks
-    // (Benar/Salah), bukan identitas jawaban yang bisa dihafal per soal.
-    div.innerHTML = isBS
-      ? '<div class="k">'+(o.nama.toLowerCase()==='benar'?'✓':'✕')+'</div><div class="lbl">'+o.nama+'</div>'
-      : isTeks
-        ? '<div class="lbl">'+o.nama+'</div>'
-        : '<img src="'+o.gambar+'" alt=""><div class="lbl">'+o.nama+'</div>';
-    div.addEventListener('click', function(){ pickAnswer(o, div, q); });
+
+    var bsClass = isBS
+      ? (' bs-opt ' + (
+          o.nama.toLowerCase() === 'benar'
+            ? 'bs-benar'
+            : 'bs-salah'
+        ))
+      : '';
+
+    var quadClass = !isBS
+      ? (' ' + QUAD[idx % 4])
+      : '';
+
+    var typeClass = isTeks || isBS
+      ? ' text-opt'
+      : ' img-opt';
+
+    div.className =
+      'opt' +
+      typeClass +
+      quadClass +
+      bsClass;
+
+    if (isBS) {
+
+      var icon = document.createElement('div');
+      icon.className = 'k';
+      icon.textContent =
+        o.nama.toLowerCase() === 'benar'
+          ? '✓'
+          : '✕';
+
+      var label = document.createElement('div');
+      label.className = 'lbl';
+      label.textContent = o.nama;
+
+      div.appendChild(icon);
+      div.appendChild(label);
+
+    } else if (isTeks) {
+
+      var textLabel = document.createElement('div');
+      textLabel.className = 'lbl';
+      textLabel.textContent = o.nama;
+
+      div.appendChild(textLabel);
+
+    } else {
+
+      var answerImage = createSafeImage(
+        o.gambar,
+        o.nama || 'Pilihan jawaban',
+        '',
+        function () {
+          // Kalau gambar gagal, kartu tetap ada.
+          // Nama produk tetap bisa dipakai sebagai fallback.
+          div.classList.add('image-missing');
+        }
+      );
+
+      var answerLabel = document.createElement('div');
+      answerLabel.className = 'lbl';
+      answerLabel.textContent = o.nama;
+
+      div.appendChild(answerImage);
+      div.appendChild(answerLabel);
+    }
+
+    div.addEventListener('click', function(){
+      pickAnswer(o, div, q);
+    });
+
     wrap.appendChild(div);
   });
 }
@@ -585,12 +758,25 @@ function renderSlider(q){
   var btn = document.getElementById('btnSliderSubmit');
   var img = document.getElementById('sliderImg');
 
-  if (q.gambarSoal){
-    img.src = q.gambarSoal;
-    img.style.display = 'block';
-  } else {
-    img.style.display = 'none';
-    img.src = '';
+  img.style.display = 'none';
+  img.removeAttribute('src');
+
+  var sliderImageUrl = safeImageUrl(q.gambarSoal);
+
+  if (sliderImageUrl) {
+
+    img.onload = function () {
+      img.style.display = 'block';
+    };
+
+    img.onerror = function () {
+      console.warn('Gambar slider gagal dimuat:', sliderImageUrl);
+
+      img.removeAttribute('src');
+      img.style.display = 'none';
+    };
+
+    img.src = sliderImageUrl;
   }
 
   input.min = q.sliderMin; input.max = q.sliderMax;
