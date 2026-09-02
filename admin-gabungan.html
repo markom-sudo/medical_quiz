@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redeem Hadiah — Elitech Expo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFFFFF; --card:#F6F7F9; --card2:#EFF1F4;
+    --orange:#376BB4; --orange-d:#2A5488;
+    --cyan:#376BB4; --green:#2FA36B; --red:#F24B64; --gold:#E8B23D;
+    --text:#373636; --muted:#8A8886; --line:rgba(55,54,54,0.14);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%, #EAF1FA 0%, var(--bg) 55%);
+    color:var(--text); font-family:'Inter',sans-serif;
+    min-height:100vh; display:flex; justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .wrap{width:100%; max-width:420px; padding:20px 18px 32px;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif; margin:0;}
+
+  .pulse-bar{height:2px; width:100%; background:linear-gradient(90deg, transparent, var(--cyan), transparent); opacity:.6; margin-bottom:18px; border-radius:2px;}
+  .brand{display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;}
+  .brand-left{display:flex; align-items:center; gap:8px;}
+  .brand .dot{width:8px;height:8px;border-radius:50%;background:var(--orange); box-shadow:0 0 12px var(--orange);}
+  .brand span{color:var(--muted); font-size:12px; letter-spacing:.14em; text-transform:uppercase;}
+  .badge{
+    display:inline-block; background:var(--card2); border:1px solid var(--line); color:var(--orange-d);
+    font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    padding:4px 10px; border-radius:999px; margin-bottom:14px;
+  }
+
+  h1{font-size:22px; margin-bottom:4px;}
+  p.sub{color:var(--muted); font-size:13.5px; margin:0 0 22px; line-height:1.5;}
+
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:18px; padding:20px;
+  }
+  input{
+    width:100%; padding:16px; border-radius:14px; border:2px solid var(--line);
+    background:#fff; color:var(--text); font-size:22px; font-family:'Space Grotesk'; font-weight:700;
+    text-transform:uppercase; letter-spacing:.08em; text-align:center;
+  }
+  input:focus{outline:none; border-color:var(--cyan);}
+  button{
+    width:100%; margin-top:14px; padding:16px; border:none; border-radius:14px;
+    background:linear-gradient(135deg, var(--orange), var(--orange-d)); color:#fff;
+    font-family:'Space Grotesk'; font-weight:700; font-size:15px; cursor:pointer;
+    box-shadow:0 8px 24px rgba(55,107,180,0.25); transition:transform .1s ease, opacity .2s ease;
+  }
+  button:active{transform:scale(.98);}
+  button:disabled{opacity:.4; box-shadow:none; cursor:default;}
+  .btn-secondary{
+    background:transparent; color:var(--muted); box-shadow:none; border:1px solid var(--line);
+    font-weight:600; padding:12px; margin-top:8px;
+  }
+
+  .result{margin-top:18px; padding:16px; border-radius:14px; display:none;}
+  .result.ok{display:block; background:rgba(47,163,107,0.10); border:1px solid var(--green);}
+  .result.used{display:block; background:rgba(232,178,61,0.14); border:1px solid var(--gold);}
+  .result.err{display:block; background:rgba(242,75,100,0.10); border:1px solid var(--red);}
+  .result.pending{display:block; background:var(--card2); border:1px solid var(--line);}
+  .result .src{
+    display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    padding:2px 8px; border-radius:999px; margin-bottom:8px; background:var(--card2); color:var(--orange-d);
+  }
+  .result .tag{font-weight:700; font-size:14px; margin-bottom:6px;}
+  .result.ok .tag{color:var(--green);}
+  .result.used .tag{color:#B98E2E;}
+  .result.err .tag{color:var(--red);}
+  .result .detail{font-size:13px; color:var(--muted); line-height:1.6;}
+  .result .detail b{color:var(--text);}
+
+  .ig-link{
+    display:inline-flex; align-items:center; gap:6px; margin-top:10px; padding:10px 14px;
+    background:#fff; border:1px solid var(--line); border-radius:12px; text-decoration:none;
+    color:var(--cyan); font-weight:700; font-size:14px;
+  }
+  .ig-link:active{transform:scale(.98);}
+
+  .follow-check{
+    margin-top:14px; padding:12px 14px; background:#fff; border:1px solid var(--line); border-radius:12px;
+    display:flex; gap:10px; align-items:flex-start;
+  }
+  .follow-check input[type=checkbox]{width:20px;height:20px; margin-top:2px; accent-color:var(--orange); flex-shrink:0;}
+  .follow-check .txt{font-size:13px; color:var(--text); line-height:1.5;}
+
+  .warn-box{
+    margin-top:14px; padding:10px 12px; border-radius:10px; background:rgba(232,178,61,0.12);
+    border:1px solid var(--gold); font-size:11.5px; color:#8A6B1E; line-height:1.5; display:none;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="brand-left"><span class="dot"></span><span>ELITECH.ID</span></div>
+    <span>STAFF PANEL</span>
+  </div>
+  <div class="pulse-bar"></div>
+
+  <div class="badge">🔍 Quiz + Search &amp; Win</div>
+  <h1>Verifikasi Kode Hadiah</h1>
+  <p class="sub">Masukkan kode dari layar pengunjung. Cek follow Instagram-nya dulu sebelum menukar hadiah.</p>
+
+  <div class="card">
+    <input id="kode" placeholder="EL-XXXXXX" autocomplete="off" autofocus>
+    <button id="btnCek">Cek Kode</button>
+    <div class="result" id="out"></div>
+    <div class="warn-box" id="warnBox">⚠️ Kode ini ditemukan di DUA sistem sekaligus (kemungkinan tabrakan kode). Cek manual ke admin sebelum menukar hadiah.</div>
+  </div>
+</div>
+<script>
+// GANTI dengan URL /exec masing-masing deployment Apps Script kamu.
+// PENTING: pastikan URL_HUNT ini SAMA dengan WEB_APP_URL yang dipakai di hunt.html.
+var URL_QUIZ = 'https://script.google.com/macros/s/AKfycbw6o_6NSS7QiLsCPp-0kgTtvDW70ihWUH8-Fuv0QvwWWd99yBOvNGZ7NRbmzxYbVsiG/exec';
+var URL_HUNT = 'https://script.google.com/macros/s/AKfycbyIZC8c0_OISbgqsiLY_pKo7-edX34yd-u6BSSr4pVlYg0H4KE4ZdKcbxqohzMrmG84ug/exec';
+
+var STATE = { kode: '', sumberUrl: '', sumberLabel: '' };
+
+document.getElementById('kode').addEventListener('keyup', function(e){
+  this.value = this.value.toUpperCase();
+  if (e.key === 'Enter') document.getElementById('btnCek').click();
+});
+
+function panggil(url, action, kode){
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: action, kode: kode })
+  })
+    .then(function(r){ return r.json(); })
+    .catch(function(err){
+      console.error(action + ' gagal:', url, err);
+      return { status: 'error_koneksi' };
+    });
+}
+
+// Username IG sering diketik dengan atau tanpa "@" — dinormalisasi supaya
+// link Instagram-nya selalu benar apapun format yang tersimpan di sheet.
+function bersihkanUsername(u){
+  return String(u || '').trim().replace(/^@+/, '');
+}
+
+// ============== LANGKAH 1: CEK KODE (baca saja, belum menandai redeemed) ==============
+document.getElementById('btnCek').addEventListener('click', function(){
+  var kode = document.getElementById('kode').value.trim();
+  if (!kode) return;
+  var out = document.getElementById('out');
+  var warnBox = document.getElementById('warnBox');
+  var btn = document.getElementById('btnCek');
+  out.className = 'result pending'; out.innerHTML = 'Mengecek…'; out.style.display = 'block';
+  warnBox.style.display = 'none';
+  btn.disabled = true;
+
+  Promise.all([panggil(URL_QUIZ, 'peekCode', kode), panggil(URL_HUNT, 'peekCode', kode)])
+    .then(function(hasil){
+      btn.disabled = false;
+      var resQuiz = hasil[0], resHunt = hasil[1];
+      var cocokQuiz = resQuiz && resQuiz.status === 'ditemukan';
+      var cocokHunt = resHunt && resHunt.status === 'ditemukan';
+
+      if (cocokQuiz && cocokHunt) warnBox.style.display = 'block';
+
+      var res, url, sumber;
+      if (cocokQuiz) { res = resQuiz; url = URL_QUIZ; sumber = '🎮 Quiz'; }
+      else if (cocokHunt) { res = resHunt; url = URL_HUNT; sumber = '🔍 Search & Win'; }
+      else { res = null; }
+
+      STATE.kode = kode; STATE.sumberUrl = url; STATE.sumberLabel = sumber;
+      renderCekHasil(out, res, sumber);
+    });
+});
+
+function renderCekHasil(out, res, sumber){
+  if (!res) {
+    out.className = 'result err';
+    out.innerHTML = '<div class="tag">❌ Kode tidak ditemukan</div><div class="detail">Cek kembali penulisan kodenya, atau pastikan URL backend sudah benar.</div>';
+    return;
+  }
+
+  var srcTag = '<div class="src">' + sumber + '</div>';
+  var username = bersihkanUsername(res.igUsername);
+  var igHtml = username
+    ? '<a class="ig-link" href="https://instagram.com/' + username + '" target="_blank">📷 @' + username + ' — buka profil</a>'
+    : '<div class="detail" style="margin-top:8px;">Username IG tidak tercatat.</div>';
+
+  // Kode ini sudah pernah ditukar sebelumnya -> tidak perlu proses follow-check lagi.
+  if (res.sudahRedeem) {
+    out.className = 'result used';
+    var detailUsed = '<b>' + (res.nama || '-') + '</b>';
+    if (typeof res.skor !== 'undefined') detailUsed += ' — skor ' + res.skor;
+    if (res.jenisHadiah) detailUsed += ' — ' + res.jenisHadiah;
+    detailUsed += '<br>Ditukar pada: ' + res.waktuRedeem;
+    out.innerHTML = srcTag + '<div class="tag">⚠️ Kode sudah pernah ditukar</div><div class="detail">' + detailUsed + '</div>' + igHtml;
+    return;
+  }
+
+  // Kode valid & belum ditukar -> tampilkan info + langkah verifikasi follow.
+  var detail = '<b>' + (res.nama || '-') + '</b>';
+  if (typeof res.skor !== 'undefined') detail += ' — skor ' + res.skor + ' (' + res.jumlahBenar + ' benar)';
+  if (res.jenisHadiah) detail += ' — ' + res.jenisHadiah;
+
+  out.className = 'result pending';
+  out.innerHTML = srcTag + '<div class="tag">Kode valid, belum ditukar</div><div class="detail">' + detail + '</div>' + igHtml +
+    '<div class="follow-check">' +
+      '<input type="checkbox" id="chkFollow">' +
+      '<div class="txt">Sudah saya cek, akun ini benar mem-follow <b>@elitech.id</b></div>' +
+    '</div>' +
+    '<button id="btnTukar" disabled>Tukar Hadiah</button>';
+
+  document.getElementById('chkFollow').addEventListener('change', function(){
+    document.getElementById('btnTukar').disabled = !this.checked;
+  });
+  document.getElementById('btnTukar').addEventListener('click', tukarHadiah);
+}
+
+// ============== LANGKAH 2: TUKAR HADIAH (baru menandai redeemed di sini) ==============
+function tukarHadiah(){
+  var btn = document.getElementById('btnTukar');
+  btn.disabled = true; btn.textContent = 'Memproses…';
+
+  panggil(STATE.sumberUrl, 'redeemCode', STATE.kode).then(function(res){
+    var out = document.getElementById('out');
+    if (res.status === 'berhasil') {
+      var detail = '<b>' + (res.nama || '-') + '</b>';
+      if (typeof res.skor !== 'undefined') detail += ' — skor ' + res.skor + ' (' + res.jumlahBenar + ' benar)';
+      if (res.jenisHadiah) detail += ' — ' + res.jenisHadiah;
+      out.className = 'result ok';
+      out.innerHTML = '<div class="src">' + STATE.sumberLabel + '</div><div class="tag">✅ Hadiah berhasil ditukar</div><div class="detail">' + detail + '</div>';
+    } else if (res.status === 'sudah_redeem') {
+      out.className = 'result used';
+      out.innerHTML = '<div class="src">' + STATE.sumberLabel + '</div><div class="tag">⚠️ Kode sudah pernah ditukar</div><div class="detail">Ditukar pada: ' + res.waktuRedeem + '</div>';
+    } else {
+      out.className = 'result err';
+      out.innerHTML = '<div class="tag">Gagal memproses</div><div class="detail">Coba tekan Cek Kode lagi.</div>';
+    }
+  });
+}
+</script>
+</body>
+</html>
