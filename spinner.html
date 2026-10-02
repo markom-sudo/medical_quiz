@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Undian Elitech Expo</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--card:#F6F7F9;--card2:#EFF1F4;--blue:#376BB4;--blue-d:#2A5488;--red:#F24B64;--green:#2FA36B;--gold:#E8B23D;--text:#373636;--muted:#8A8886;--line:rgba(55,54,54,.14)}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#EAF1FA 0%,var(--bg) 55%);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh}
+h1,h2{font-family:'Space Grotesk',sans-serif;margin:0}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 18px 40px}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+header h1{font-size:24px}
+header .date{color:var(--muted);font-size:13px}
+.layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px;align-items:start}
+@media(max-width:820px){.layout{grid-template-columns:1fr}}
+.stage{display:flex;flex-direction:column;align-items:center;gap:16px}
+.wheel-box{position:relative;width:100%;max-width:520px}
+#wheel{width:100%;height:auto;display:block}
+.pointer{position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-top:34px solid var(--red);filter:drop-shadow(0 3px 4px rgba(0,0,0,.3));z-index:2}
+.btn{border:none;border-radius:14px;padding:14px 18px;font-size:15px;font-weight:700;font-family:'Space Grotesk',sans-serif;cursor:pointer;transition:transform .1s}
+.btn:active{transform:scale(.98)}
+.btn:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid rgba(55,107,180,.45);outline-offset:2px}
+.btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue-d));color:#fff;box-shadow:0 8px 24px rgba(55,107,180,.3)}
+.btn-ghost{background:transparent;color:var(--blue);border:1px solid rgba(55,107,180,.4)}
+.btn-danger{background:transparent;color:var(--red);border:1px solid rgba(242,75,100,.4)}
+.btn:disabled{opacity:.4;cursor:default;box-shadow:none}
+#btnSpin{width:100%;max-width:520px;font-size:20px;padding:18px}
+.opt{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.opt input{width:18px;height:18px;accent-color:var(--blue)}
+.panel{display:flex;flex-direction:column;gap:18px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+.box h2{font-size:15px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.count{color:var(--muted);font-size:13px;font-weight:600;font-family:'Inter'}
+textarea,input[type=text]{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:14px;font-family:inherit;background:#fff;color:var(--text)}
+textarea{min-height:110px;resize:vertical}
+.row{display:flex;gap:8px;margin-top:8px}
+.row .btn{flex:1;padding:12px}
+.list{max-height:230px;overflow:auto;display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.item{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:7px 8px 7px 12px;font-size:13.5px}
+.item span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item button{border:none;background:var(--card2);color:var(--muted);width:26px;height:26px;border-radius:8px;cursor:pointer;font-size:14px}
+.item button:hover{color:var(--red)}
+.item.win{border-color:rgba(232,178,61,.6);background:rgba(232,178,61,.1)}
+.item.win b{font-family:'Space Grotesk';color:#B98E2E;min-width:22px}
+.item .tm{color:var(--muted);font-size:11.5px;flex:none}
+.empty{color:var(--muted);font-size:13px;padding:8px 2px}
+.overlay{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(20,30,50,.7);padding:20px}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:22px;padding:34px 28px;max-width:520px;width:100%;text-align:center;animation:pop .45s cubic-bezier(.34,1.56,.64,1) both}
+.modal .lbl{color:var(--muted);font-size:14px;margin-bottom:6px}
+.modal .name{font-family:'Space Grotesk';font-weight:700;font-size:clamp(30px,7vw,52px);color:var(--blue);line-height:1.15;margin-bottom:22px;word-break:break-word}
+@keyframes pop{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.modal{animation:none}}
+.modes{display:inline-flex;background:var(--card2);border-radius:12px;padding:4px;gap:4px}
+.modes button{border:none;background:transparent;border-radius:9px;padding:8px 22px;font:700 14px 'Space Grotesk',sans-serif;color:var(--muted);cursor:pointer}
+.modes button.on{background:#fff;color:var(--blue);box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.slot-box{display:none;width:100%;max-width:520px;position:relative;height:264px;background:var(--card);border:2px solid var(--line);border-radius:20px;overflow:hidden}
+.slot-box::before{content:'';position:absolute;left:0;right:0;top:88px;height:88px;background:rgba(55,107,180,.12);border-top:2px solid var(--blue);border-bottom:2px solid var(--blue);z-index:1;pointer-events:none}
+#slotItems{position:absolute;inset:0}
+.slot-i{position:absolute;left:0;right:0;height:88px;line-height:88px;padding:0 44px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:700 clamp(22px,5vw,34px)/88px 'Space Grotesk',sans-serif}
+.slot-box.fast .slot-i{filter:blur(2px)}
+.arrow{position:absolute;top:88px;height:88px;line-height:88px;color:var(--blue);font-size:22px;z-index:2}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Undian Elitech Expo</h1>
+    <div class="date" id="dateLbl"></div>
+  </header>
+
+  <div class="layout">
+    <div class="stage">
+      <div class="modes" id="modes"><button data-m="wheel">Roda</button><button data-m="slot">Slot</button></div>
+      <div class="wheel-box"><div class="pointer"></div><canvas id="wheel" width="1000" height="1000"></canvas></div>
+      <div class="slot-box" id="slot"><div id="slotItems"></div><span class="arrow" style="left:12px">▶</span><span class="arrow" style="right:12px">◀</span></div>
+      <button class="btn btn-primary" id="btnSpin">Putar</button>
+      <label class="opt"><input type="checkbox" id="chkAuto" checked> Keluarkan pemenang dari daftar otomatis</label>
+    </div>
+
+    <div class="panel">
+      <div class="box">
+        <h2>Tambah peserta</h2>
+        <textarea id="taBulk" placeholder="Tempel daftar nama dari Sheets, satu nama per baris"></textarea>
+        <div class="row"><button class="btn btn-primary" id="btnBulk">Tambahkan daftar</button></div>
+        <div class="row"><input type="text" id="inOne" placeholder="Atau ketik satu nama, lalu Enter" autocomplete="off"><button class="btn btn-ghost" id="btnOne" style="flex:none;padding:12px 16px">Tambah</button></div>
+      </div>
+
+      <div class="box">
+        <h2>Peserta undian <span class="count" id="cntNames">0</span></h2>
+        <div class="list" id="listNames"></div>
+        <div class="row"><button class="btn btn-danger" id="btnClearNames">Kosongkan daftar</button></div>
+      </div>
+
+      <div class="box">
+        <h2>Pemenang hari ini <span class="count" id="cntWin">0</span></h2>
+        <div class="list" id="listWin"></div>
+        <div class="row">
+          <button class="btn btn-ghost" id="btnCopy">Salin pemenang</button>
+          <button class="btn btn-danger" id="btnReset">Mulai hari baru</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="lbl">Pemenangnya adalah</div>
+    <div class="name" id="winName"></div>
+    <button class="btn btn-primary" id="btnClose" style="width:100%">Lanjut</button>
+  </div>
+</div>
+
+<script>
+var KEY = 'elitechSpinnerData';
+var COLORS = ['#376BB4','#4C6FFF','#FF5470','#FFA836','#2FC77C'];
+var S = { names: [], winners: [], date: '', mode: 'wheel' };
+var rot = 0, spinning = false;
+var cv = document.getElementById('wheel'), ctx = cv.getContext('2d');
+var $ = function (id) { return document.getElementById(id); };
+
+function today() {
+  return new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+function load() {
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) { var d = JSON.parse(raw); S.names = d.names || []; S.winners = d.winners || []; S.date = d.date || ''; S.mode = d.mode === 'slot' ? 'slot' : 'wheel'; }
+  } catch (e) {}
+  if (!S.date) S.date = today();
+}
+function norm(s) { return String(s).trim().replace(/\s+/g, ' '); }
+function known(name) {
+  var k = name.toLowerCase();
+  return S.names.concat(S.winners.map(function (w) { return w.name; }))
+    .some(function (n) { return n.toLowerCase() === k; });
+}
+function addNames(arr) {
+  var added = 0;
+  arr.forEach(function (raw) {
+    var n = norm(raw);
+    if (n && !known(n)) { S.names.push(n); added++; }
+  });
+  save(); render();
+  return added;
+}
+function randInt(n) {
+  return Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296 * n);
+}
+
+function draw() {
+  var n = S.names.length, W = cv.width, r = W / 2;
+  ctx.clearRect(0, 0, W, W);
+  if (!n) {
+    ctx.beginPath(); ctx.arc(r, r, r - 6, 0, 7); ctx.fillStyle = '#EFF1F4'; ctx.fill();
+    ctx.fillStyle = '#8A8886'; ctx.font = '600 38px Inter, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Tambahkan nama dulu', r, r + 12);
+    return;
+  }
+  var arc = 2 * Math.PI / n;
+  for (var i = 0; i < n; i++) {
+    ctx.beginPath(); ctx.moveTo(r, r);
+    ctx.arc(r, r, r - 6, rot + i * arc, rot + (i + 1) * arc); ctx.closePath();
+    var c = COLORS[i % COLORS.length];
+    if (i === n - 1 && n > 1 && i % COLORS.length === 0) c = '#2A5488';
+    ctx.fillStyle = c; ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = n > 1 ? 3 : 0; ctx.stroke();
+  }
+  var fs = Math.max(11, Math.min(36, arc * r * 0.5));
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  ctx.font = '700 ' + fs + 'px "Space Grotesk", sans-serif';
+  for (var j = 0; j < n; j++) {
+    var t = S.names[j]; if (t.length > 20) t = t.slice(0, 19) + '…';
+    ctx.save(); ctx.translate(r, r); ctx.rotate(rot + (j + 0.5) * arc);
+    ctx.fillText(t, r - 36, 0); ctx.restore();
+  }
+  ctx.beginPath(); ctx.arc(r, r, 44, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.lineWidth = 6; ctx.strokeStyle = '#376BB4'; ctx.stroke();
+}
+
+function item(text, onDel, cls, pre, post) {
+  var d = document.createElement('div'); d.className = 'item' + (cls ? ' ' + cls : '');
+  if (pre) { var b = document.createElement('b'); b.textContent = pre; d.appendChild(b); }
+  var s = document.createElement('span'); s.textContent = text; d.appendChild(s);
+  if (post) { var t = document.createElement('em'); t.className = 'tm'; t.style.fontStyle = 'normal'; t.textContent = post; d.appendChild(t); }
+  var x = document.createElement('button'); x.textContent = '✕'; x.setAttribute('aria-label', 'Hapus');
+  x.onclick = onDel; d.appendChild(x);
+  return d;
+}
+
+function render() {
+  $('dateLbl').textContent = S.date;
+  $('cntNames').textContent = S.names.length + ' orang';
+  $('cntWin').textContent = S.winners.length + ' orang';
+  var ln = $('listNames'); ln.innerHTML = '';
+  if (!S.names.length) ln.innerHTML = '<div class="empty">Belum ada peserta.</div>';
+  S.names.forEach(function (n, i) {
+    ln.appendChild(item(n, function () { if (spinning) return; S.names.splice(i, 1); save(); render(); }));
+  });
+  var lw = $('listWin'); lw.innerHTML = '';
+  if (!S.winners.length) lw.innerHTML = '<div class="empty">Belum ada pemenang.</div>';
+  S.winners.forEach(function (w, i) {
+    lw.appendChild(item(w.name, function () {
+      if (spinning) return;
+      if (!confirm('Batalkan "' + w.name + '" sebagai pemenang? Namanya dikembalikan ke daftar.')) return;
+      S.winners.splice(i, 1); S.names.push(w.name); save(); render();
+    }, 'win', (i + 1) + '.', w.time));
+  });
+  $('btnSpin').disabled = spinning || S.names.length < 1;
+  redraw();
+}
+
+var pos = 0;
+function mod(a, n) { return ((a % n) + n) % n; }
+function redraw() { if (S.mode === 'slot') drawSlot(); else draw(); }
+
+function drawSlot() {
+  var el = $('slotItems'), n = S.names.length, H = 88;
+  el.innerHTML = '';
+  if (!n) { el.innerHTML = '<div class="slot-i" style="top:88px;color:#8A8886;font-size:20px">Tambahkan nama dulu</div>'; return; }
+  var base = Math.floor(pos);
+  for (var i = base - 1; i <= base + 2; i++) {
+    var d = document.createElement('div'); d.className = 'slot-i';
+    d.style.top = ((i - pos) * H + H) + 'px';
+    d.style.opacity = Math.max(0.15, 1 - Math.abs(i - pos) * 0.65);
+    d.textContent = S.names[mod(i, n)];
+    el.appendChild(d);
+  }
+}
+
+function spinSlot() {
+  var n = S.names.length;
+  if (spinning || n < 1) return;
+  spinning = true; $('btnSpin').disabled = true;
+  var w = randInt(n), box = $('slot');
+  pos = mod(pos, n);
+  var delta = mod(w - pos, n) + n * Math.ceil(40 / n);
+  var start = pos, t0 = null;
+  var dur = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 600 : 5500;
+  box.classList.add('fast');
+  function step(ts) {
+    if (!t0) t0 = ts;
+    var p = Math.min(1, (ts - t0) / dur);
+    pos = start + delta * (1 - Math.pow(1 - p, 4));
+    drawSlot();
+    if (p > 0.75) box.classList.remove('fast');
+    if (p < 1) { requestAnimationFrame(step); return; }
+    pos = w; box.classList.remove('fast');
+    finish(w);
+  }
+  requestAnimationFrame(step);
+}
+
+function applyMode() {
+  var slot = S.mode === 'slot';
+  document.querySelector('.wheel-box').style.display = slot ? 'none' : 'block';
+  $('slot').style.display = slot ? 'block' : 'none';
+  document.querySelectorAll('#modes button').forEach(function (b) { b.classList.toggle('on', b.dataset.m === S.mode); });
+  redraw();
+}
+document.querySelectorAll('#modes button').forEach(function (b) {
+  b.onclick = function () { if (spinning) return; S.mode = b.dataset.m; save(); applyMode(); };
+});
+
+function spin() {
+  if (S.mode === 'slot') return spinSlot();
+  return spinWheel();
+}
+
+function spinWheel() {
+  var n = S.names.length;
+  if (spinning || n < 1) return;
+  spinning = true; $('btnSpin').disabled = true;
+  var w = randInt(n), arc = 2 * Math.PI / n;
+  var jitter = (Math.random() - 0.5) * arc * 0.7;
+  var target = -Math.PI / 2 - (w + 0.5) * arc + jitter;
+  var twoPi = 2 * Math.PI;
+  var delta = ((target - rot) % twoPi + twoPi) % twoPi + twoPi * 7;
+  var start = rot, dur = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 600 : 6000, t0 = null;
+  function step(ts) {
+    if (!t0) t0 = ts;
+    var p = Math.min(1, (ts - t0) / dur);
+    rot = start + delta * (1 - Math.pow(1 - p, 4));
+    draw();
+    if (p < 1) { requestAnimationFrame(step); return; }
+    finish(w);
+  }
+  requestAnimationFrame(step);
+}
+
+function finish(idx) {
+  var name = S.names[idx];
+  var time = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  S.winners.push({ name: name, time: time });
+  if ($('chkAuto').checked) S.names.splice(idx, 1);
+  else S.winners[S.winners.length - 1].keep = true;
+  save();
+  spinning = false;
+  $('winName').textContent = name;
+  $('overlay').classList.add('show');
+  render();
+}
+
+$('btnSpin').onclick = spin;
+$('btnClose').onclick = function () { $('overlay').classList.remove('show'); };
+$('btnBulk').onclick = function () {
+  var added = addNames($('taBulk').value.split(/\r?\n/));
+  $('taBulk').value = '';
+  if (!added) alert('Tidak ada nama baru. Semua nama kosong atau sudah ada di daftar.');
+};
+function addOne() {
+  var v = $('inOne').value;
+  if (!norm(v)) return;
+  if (!addNames([v])) alert('Nama sudah ada di daftar.');
+  $('inOne').value = ''; $('inOne').focus();
+}
+$('btnOne').onclick = addOne;
+$('inOne').addEventListener('keyup', function (e) { if (e.key === 'Enter') addOne(); });
+$('btnClearNames').onclick = function () {
+  if (spinning || !S.names.length) return;
+  if (confirm('Kosongkan seluruh daftar peserta?')) { S.names = []; save(); render(); }
+};
+$('btnCopy').onclick = function () {
+  var txt = S.winners.map(function (w, i) { return (i + 1) + '. ' + w.name; }).join('\n');
+  if (!txt) return;
+  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
+    .then(function () { $('btnCopy').textContent = 'Tersalin ✓'; setTimeout(function () { $('btnCopy').textContent = 'Salin pemenang'; }, 1500); })
+    .catch(function () { prompt('Salin manual:', txt); });
+};
+$('btnReset').onclick = function () {
+  if (spinning) return;
+  if (!confirm('Mulai hari baru? Daftar peserta dan daftar pemenang akan dikosongkan. Pastikan pemenang sudah dicatat.')) return;
+  S = { names: [], winners: [], date: today(), mode: S.mode }; save(); render();
+};
+
+load(); render(); applyMode();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(redraw);
+</script>
+</body>
+</html>
